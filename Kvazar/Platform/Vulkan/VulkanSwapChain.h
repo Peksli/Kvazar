@@ -17,7 +17,7 @@ namespace Kvazar {
 		{ 
 			return  !m_SurfaceFormats.empty()	&&
 					!m_PresentModes.empty()		&& 
-					m_SurfaceCapabilities.minImageCount > 0; 
+					 m_SurfaceCapabilities.minImageCount > 0; 
 		}
 		void Clear() { m_SurfaceCapabilities = {}; m_SurfaceFormats.clear(); m_PresentModes.clear(); }
 	};
