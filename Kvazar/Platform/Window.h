@@ -11,8 +11,6 @@ namespace Kvazar {
 		virtual ~Window() = default;
 
 		virtual void Create() = 0;
-		virtual void Run() = 0;
-		virtual void Shutdown() = 0;
 
 		struct GLFWwindow* GetGLFWWindow() const { return m_WindowData.window; }
 		int GetWidth() const { return m_WindowData.m_Width;  }

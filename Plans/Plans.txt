@@ -1,0 +1,31 @@
+Done:
+	- Renderer: SetRendererApiType
+	- create window + context
+	- Now RendererAPI can get access to swapchain
+	
+	- FrameData in RendererAPI which contains per frame:
+		- command pool
+		- command buffer
+		- imageAcquireSemaphore
+		- renderFinishedSemaphore
+		- workDoneFence
+		
+	- constexpr FRAMES_IN_FLIGHT = 2
+	- Logical to get frame index
+	
+	
+	
+Сейчас как я понимаю все работает вот так:
+	- Acquire image
+	- begin buffer
+	- vkQueueSubmit
+	- vkQueuePresent
+	
+Надо:
+	Дописать создание command Buffers + pools
+	
+	
+	
+1) 	- wait current frame fence
+	- reset fence
+	- acquire image + semaphore

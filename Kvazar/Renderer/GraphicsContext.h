@@ -7,25 +7,52 @@
 
 namespace Kvazar {
 
-	struct GraphicsContextSpecification
+	//struct GraphicsContextSpecification
+	//{
+	//	GLFWwindow* m_Window = nullptr;
+	//	uint16_t m_FramesInFlight = 1;
+	//};
+
+	//class GraphicsContextBuilder
+	//{
+	//public:
+	//	GraphicsContextBuilder() = default;
+	//	virtual ~GraphicsContextBuilder() = default;
+
+	//	virtual void Build() = 0;
+	//	virtual void Destroy() = 0;
+
+	//	static std::shared_ptr<GraphicsContextBuilder> GetTypeOfContext(const GraphicsContextSpecification& specification);
+
+	//protected:
+	//	GLFWwindow* m_Window = nullptr;
+	//};
+
+	struct ContextSpec
 	{
 		GLFWwindow* m_Window = nullptr;
-		uint16_t m_FramesInFlight = 1;
 	};
 
-	class GraphicsContextBuilder
+	class Context
 	{
 	public:
-		GraphicsContextBuilder() = default;
-		virtual ~GraphicsContextBuilder() = default;
+		Context() = default;
+		virtual ~Context() = default;
 
-		virtual void Build() = 0;
-		virtual void Destroy() = 0;
+		virtual void Setup() = 0;
+		virtual void Shutdown() = 0;
 
-		static std::shared_ptr<GraphicsContextBuilder> GetTypeOfContext(const GraphicsContextSpecification& specification);
-
-	protected:
+	private:
 		GLFWwindow* m_Window = nullptr;
+	};
+
+	class ContextCreator
+	{
+	public:
+		ContextCreator();
+		virtual ~ContextCreator();
+
+		static std::shared_ptr<Context> Create(const ContextSpec& spec);
 	};
 
 }

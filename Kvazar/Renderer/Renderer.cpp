@@ -20,15 +20,15 @@ namespace Kvazar {
 		KVAZAR_DEBUG("[Renderer] ~Renderer() called");
 	}
 
-	void Renderer::Init(ApiType type)
+	void Renderer::Init()
 	{
-		switch (type)
+		switch (s_RendererAPI->GetApiType())
 		{
 		case ApiType::None:		break;
 		case ApiType::OpenGL:	break;
 		case ApiType::Metal:	break;
 		case ApiType::DX:		break;
-		case ApiType::Vulkan: RendererAPI::SetApiType(type); s_RendererAPI = new VulkanRendererAPI(); break;
+		case ApiType::Vulkan:	s_RendererAPI = new VulkanRendererAPI(); s_RendererAPI->Init(); break;
 		}
 	}
 
@@ -41,22 +41,27 @@ namespace Kvazar {
 
 	void Renderer::BeginScene()
 	{
-
+		s_RendererAPI->BeginFrame(); // acquire -> signal acquire sem
 	}
 
 	void Renderer::BeginRendering()
 	{
-
+		s_RendererAPI->BeginCommandBuffer(); // begin cmd buffer
 	}
 
 	void Renderer::EndRendering()
 	{
-
+		s_RendererAPI->ExecuteCommandBuffer(); // end + submit command buffer
 	}
 
 	void Renderer::EndScene()
 	{
+		s_RendererAPI->EndFrame(); // present result
+	}
 
+	void Renderer::ClearImage()
+	{
+		s_RendererAPI->ClearImage();
 	}
 
 }

@@ -28,6 +28,8 @@ namespace Kvazar {
 		virtual void EndFrame()				= 0;
 		virtual void Shutdown()				= 0;
 
+		virtual void ClearImage()			= 0;
+
 		static void SetApiType(ApiType type) { s_ApiType = type; }
 
 		static ApiType GetApiType() { return s_ApiType; }

@@ -16,10 +16,23 @@ namespace Kvazar {
 
 		static VkDebugUtilsMessengerCreateInfoEXT GetDebugMessengerCreateInfo();
 
-		VkDebugUtilsMessengerEXT GetRaw() const { return m_DebugMessenger; }
+		void SetDebugMessenger(VkDebugUtilsMessengerEXT messenger) { m_DebugMessenger = messenger; }
+		VkDebugUtilsMessengerEXT GetRaw() { return m_DebugMessenger; }
 
 	private:
-		VkDebugUtilsMessengerEXT m_DebugMessenger = VK_NULL_HANDLE;
+		VkDebugUtilsMessengerEXT m_DebugMessenger;
+	};
+
+	class VulkanDebugMessenger
+	{
+	public:
+		VulkanDebugMessenger() = default;
+		virtual ~VulkanDebugMessenger() = default;
+
+		void SetMessenger(VkDebugUtilsMessengerEXT messenger) { m_DebugMessenger = messenger; }
+
+	private:
+		VkDebugUtilsMessengerEXT m_DebugMessenger;
 	};
 
 }

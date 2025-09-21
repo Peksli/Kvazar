@@ -17,8 +17,11 @@ namespace Kvazar {
 
 	void Application::Init()
 	{
-		Renderer::Init(ApiType::Vulkan);
-		m_WindowsWindow = std::make_shared<WindowsWindow>(900, 700, "Vulkan engine");
+		Renderer::SetApiType(ApiType::Vulkan);
+
+		m_WindowsWindow = std::make_shared<WindowsWindow>(900, 700, "Vulkan engine"); 
+
+		Renderer::Init();
 	}
 
 	void Application::Run()
@@ -29,6 +32,7 @@ namespace Kvazar {
 
 			Renderer::BeginScene();
 			Renderer::BeginRendering();
+			Renderer::ClearImage();
 			Renderer::EndRendering();
 			Renderer::EndScene();
 		}

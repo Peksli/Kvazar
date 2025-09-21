@@ -15,11 +15,10 @@ namespace Kvazar {
 		~WindowsWindow();
 
 		void Create() override;
-		void Run() override;
-		void Shutdown() override;
 
 	private:
-		std::shared_ptr<GraphicsContextBuilder> m_ContextBuilder;
+		// std::shared_ptr<GraphicsContextBuilder> m_ContextBuilder;
+		std::shared_ptr<Context> m_Context;
 	};
 
 }

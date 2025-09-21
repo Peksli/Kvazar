@@ -16,12 +16,11 @@ namespace Kvazar {
 	{
 		KVAZAR_DEBUG("[Windows Window] ~WindowsWindow() called");
 
-		Shutdown();
-		m_ContextBuilder->Destroy();
-		m_ContextBuilder.reset();
+		m_Context->Shutdown();
+		m_Context.reset();
 	}
 
-	void WindowsWindow::Create() 
+	void WindowsWindow::Create()
 	{
 		glfwInit();
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -31,36 +30,15 @@ namespace Kvazar {
 		if (!m_WindowData.window)
 		{
 			KVAZAR_CRITICAL("Failed to create GLFW window!");
-			Shutdown();
+			glfwTerminate();
 			return;
 		}
 
-		GraphicsContextSpecification specification;
-		specification.m_FramesInFlight = static_cast<uint16_t>(2);
-		specification.m_Window = m_WindowData.window;
+		ContextSpec spec;
+		spec.m_Window = m_WindowData.window;
 
-		m_ContextBuilder = GraphicsContextBuilder::GetTypeOfContext(specification);
-		if (!m_ContextBuilder)
-		{
-			KVAZAR_CRITICAL("Didn't create context");
-		}
-		else
-		{
-			m_ContextBuilder->Build();
-		}
-	}
-
-	void WindowsWindow::Run() 
-	{
-		while (static_cast<bool>(glfwWindowShouldClose(m_WindowData.window)) != true) 
-		{
-			glfwPollEvents();
-		}
-	}
-
-	void WindowsWindow::Shutdown()
-	{
-		glfwTerminate();
+		m_Context = ContextCreator::Create(spec);
+		m_Context->Setup();
 	}
 
 }

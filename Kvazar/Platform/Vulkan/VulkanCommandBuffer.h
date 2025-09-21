@@ -16,7 +16,7 @@ namespace Kvazar {
 		VkCommandPool& GetRaw() { return m_CommandPool; }
 
 	private:
-		VkCommandPool m_CommandPool;
+		VkCommandPool m_CommandPool = VK_NULL_HANDLE;
 	};
 
 	class VulkanCommandPoolManager
@@ -66,7 +66,7 @@ namespace Kvazar {
 		CommandBufferLevel GetLevel() const { return m_Level; }
 
 	private:
-		VkCommandBuffer m_CommandBuffer;
+		VkCommandBuffer m_CommandBuffer = VK_NULL_HANDLE;
 
 		CommandBufferState m_State;
 		CommandBufferLevel m_Level;
@@ -98,6 +98,9 @@ namespace Kvazar {
 			uint32_t				submitCount,
 			const VkSubmitInfo2*	pSubmits,
 			VkFence					fence);
+
+		static void Reset(
+		VulkanCommandBuffer&		cmdBuffer);
 	};
 
 }

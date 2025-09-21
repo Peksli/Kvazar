@@ -11,7 +11,7 @@ namespace Kvazar {
 		Renderer();
 		virtual ~Renderer();
 
-		static void Init(ApiType type);
+		static void Init();
 		static void Shutdown();
 
 		static void BeginScene();
@@ -19,6 +19,9 @@ namespace Kvazar {
 		static void EndRendering();
 		static void EndScene();
 
+		static void ClearImage();
+
+		static void	SetApiType(ApiType type) { s_RendererAPI->SetApiType(type); }
 		static ApiType GetApiType() { return RendererAPI::GetApiType(); }
 
 	private:
