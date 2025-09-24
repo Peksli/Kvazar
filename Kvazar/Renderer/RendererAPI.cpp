@@ -4,7 +4,7 @@
 
 namespace Kvazar {
 
-	Kvazar::ApiType RendererAPI::s_ApiType;
+	ApiType RendererAPI::s_ApiType;
 
 	RendererAPI::RendererAPI()
 	{

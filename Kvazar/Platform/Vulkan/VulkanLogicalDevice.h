@@ -8,52 +8,35 @@
 
 namespace Kvazar {
 
-	//class VulkanLogicalDevice {
-	//public:
-	//	VulkanLogicalDevice(VkDevice logicalDevice, VkQueue graphicsQueue, VkQueue presentationQueue);
-	//	~VulkanLogicalDevice();
-
-	//	VkDevice GetRaw() const { return m_LogicalDevice; }
-	//	VkQueue GetGraphicsQueue() const { return m_GraphicsQueue; }
-	//	VkQueue GetPresentationQueue() const { return m_PresentationQueue; }
-
-	//private:
-	//	VkDevice m_LogicalDevice = VK_NULL_HANDLE;
-	//	VkQueue m_GraphicsQueue = VK_NULL_HANDLE;
-	//	VkQueue m_PresentationQueue = VK_NULL_HANDLE;
-	//};
-
-
-	//class VulkanLogicalDeviceCreator
-	//{
-	//public:
-	//	VulkanLogicalDeviceCreator();
-	//	virtual ~VulkanLogicalDeviceCreator();
-
-	//	static std::shared_ptr<VulkanLogicalDevice> CreateFrom(std::shared_ptr<VulkanPhysicalDevice> device);
-
-	//private:
-	//	static std::vector<const char*> requiredExtensions;
-	//};
+	struct VulkanLogicalDeviceData
+	{
+		VkDevice m_Device;
+		VkQueue  m_GraphicsQueue;
+		VkQueue  m_PresentationQueue;
+		uint32_t m_GraphicsQueueIndex;
+		uint32_t m_PresentationQueueIndex;
+	};
 	
 	class VulkanLogicalDevice
 	{
 	public:
-		VulkanLogicalDevice() = default;
-		virtual ~VulkanLogicalDevice() = default;
+		VulkanLogicalDevice();
+		virtual ~VulkanLogicalDevice();
 
-		void SetDevice(VkDevice device)							{ m_Device = device;				}
-		void SetGraphicsQueue(VkQueue graphicsQueue)			{ m_GraphicsQueue = graphicsQueue;	}
-		void SetPresentationQueue(VkQueue presentationQueue)	{ m_PresentationQueue;				}
+		void SetDevice(VkDevice device)							{ m_Data.m_Device = device;							}
+		void SetGraphicsQueue(VkQueue graphicsQueue)			{ m_Data.m_GraphicsQueue = graphicsQueue;			}
+		void SetPresentationQueue(VkQueue presentationQueue)	{ m_Data.m_PresentationQueue = presentationQueue;	}
+		void SetPresentIndex(uint32_t presentIndex)				{ m_Data.m_PresentationQueueIndex = presentIndex;	}
+		void SetGraphicsIndex(uint32_t graphicsIndex)			{ m_Data.m_GraphicsQueueIndex = graphicsIndex;		}
 
-		VkDevice GetDevice()			 { return m_Device;				}
-		VkQueue  GetGraphicsQueue()		 { return m_GraphicsQueue;		}
-		VkQueue  GetPresentationQueue()	 { return m_PresentationQueue;	}
+		VkDevice GetDevice()			const	{ return m_Data.m_Device;					}
+		VkQueue  GetGraphicsQueue()		const	{ return m_Data.m_GraphicsQueue;			}
+		VkQueue  GetPresentationQueue()	const	{ return m_Data.m_PresentationQueue;		}
+		uint32_t GetGraphicsIndex()		const 	{ return m_Data.m_GraphicsQueueIndex;		}
+		uint32_t GetPresentationIndex()	const 	{ return m_Data.m_PresentationQueueIndex;	}
 
 	private:
-		VkDevice m_Device;
-		VkQueue  m_GraphicsQueue;
-		VkQueue  m_PresentationQueue;
+		VulkanLogicalDeviceData m_Data;
 	};
 
 }

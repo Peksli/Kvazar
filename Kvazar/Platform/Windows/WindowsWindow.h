@@ -17,7 +17,6 @@ namespace Kvazar {
 		void Create() override;
 
 	private:
-		// std::shared_ptr<GraphicsContextBuilder> m_ContextBuilder;
 		std::shared_ptr<Context> m_Context;
 	};
 

@@ -7,9 +7,9 @@
 
 namespace Kvazar {
 
-	std::array<FrameData, FRAMES_IN_FLIGHT> VulkanRendererAPI::m_FramesData;
+	Kvazar::FramesData VulkanRendererAPI::m_FramesData;
 
-	uint8_t VulkanRendererAPI::m_CurrentFrameIndex = 0;
+	uint8_t VulkanRendererAPI::m_CurrentFrameIndex;
 
 	VulkanRendererAPI::VulkanRendererAPI()
 	{
@@ -23,174 +23,218 @@ namespace Kvazar {
 
 	void VulkanRendererAPI::Init()
 	{
-		//VulkanGraphicsContextBuilder* contextBuilder = VulkanGraphicsContextBuilder::GetContext();
+		VulkanContext* context = VulkanContext::GetContext();
+		m_CurrentFrameIndex = 0;
 
-		//m_Swapchain = contextBuilder->GetVulkanSwapchain();
+		VkSemaphoreCreateInfo semaphoreInfo = {};
+		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+		semaphoreInfo.pNext = nullptr;
+		semaphoreInfo.flags = 0;
 
-		//VkSemaphoreCreateInfo semaphoreInfo = {};
-		//semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-		//semaphoreInfo.pNext = nullptr;
-		//semaphoreInfo.flags = 0;
+		VkFenceCreateInfo fenceInfo = {};
+		fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		fenceInfo.pNext = nullptr;
+		fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-		//VkFenceCreateInfo fenceInfo = {};
-		//fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-		//fenceInfo.pNext = nullptr;
-		//fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+		m_FramesData.m_RenderFinishedSemaphore.resize(FRAMES_IN_FLIGHT);
+		m_FramesData.m_ImageAcquireSemaphore.resize(FRAMES_IN_FLIGHT);
+		m_FramesData.m_CommandBuffers.resize(FRAMES_IN_FLIGHT);
+		m_FramesData.m_WorkDoneFences.resize(FRAMES_IN_FLIGHT);
+		m_FramesData.m_CommandPools.resize(FRAMES_IN_FLIGHT);
 
-		//for (uint8_t i = 0; i < FRAMES_IN_FLIGHT; i++)
-		//{
-		//	VK_CHECK(vkCreateSemaphore(
-		//		contextBuilder->GetVulkanLogicalDevice()->GetRaw(),
-		//		&semaphoreInfo,
-		//		nullptr,
-		//		&m_FramesData[m_CurrentFrameIndex].imageAcquireSemaphore
-		//	));
+		for (uint32_t i = 0; i < FRAMES_IN_FLIGHT; i++)
+		{
+			vkCreateSemaphore(
+				context->GetContextData().m_LogicalDevice.GetDevice(),
+				&semaphoreInfo,
+				nullptr,
+				&m_FramesData.m_ImageAcquireSemaphore[i]
+			);
 
-		//	VK_CHECK(vkCreateSemaphore(
-		//		contextBuilder->GetVulkanLogicalDevice()->GetRaw(),
-		//		&semaphoreInfo,
-		//		nullptr,
-		//		&m_FramesData[m_CurrentFrameIndex].renderFinishedSemahore
-		//	));
+			vkCreateSemaphore(
+				context->GetContextData().m_LogicalDevice.GetDevice(),
+				&semaphoreInfo,
+				nullptr,
+				&m_FramesData.m_RenderFinishedSemaphore[i]
+			);
 
-		//	VK_CHECK(vkCreateFence(
-		//		contextBuilder->GetVulkanLogicalDevice()->GetRaw(),
-		//		&fenceInfo,
-		//		nullptr,
-		//		&m_FramesData[m_CurrentFrameIndex].workDoneFence
-		//	));
+			vkCreateFence(
+				context->GetContextData().m_LogicalDevice.GetDevice(),
+				&fenceInfo,
+				nullptr,
+				&m_FramesData.m_WorkDoneFences[i]
+			);
 
-		//	QueueFamilyIndices indices = 
-		//		VulkanPhysicalDeviceSelector::GetFamilyIndices(contextBuilder->GetVulkanPhysicalDevice()->GetRaw());
+			VulkanCommandPool::Create(
+				m_FramesData.m_CommandPools[i],
+				(VkCommandPoolCreateFlagBits)(VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT),
+				context->GetContextData().m_LogicalDevice.GetGraphicsIndex()
+			);
 
-		//	VulkanCommandPoolManager::Create(
-		//		m_FramesData[m_CurrentFrameIndex].commandPool,
-		//		(VkCommandPoolCreateFlagBits)(VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT),
-		//		indices.graphicsQueueFamily.value()
-		//	);
+			VulkanCommandBuffer::Allocate(
+				m_FramesData.m_CommandBuffers[i],
+				m_FramesData.m_CommandPools[i],
+				CommandBufferLevel::Primary,
+				1
+			);
+		}
 
-		//	VulkanCommandBufferManager::Allocate(
-		//		m_FramesData[m_CurrentFrameIndex].commandBuffer,
-		//		m_FramesData[m_CurrentFrameIndex].commandPool,
-		//		CommandBufferLevel::Primary,
-		//		1
-		//	);
-		//}
+		KVAZAR_DEBUG("VulkanRendererAPI initialized, ready to go...");
 	}
 
 	void VulkanRendererAPI::BeginFrame()
 	{
-		//m_Swapchain->BeginFrame();
+		VulkanContext* context = VulkanContext::GetContext();
+		context->GetContextData().m_Swapchain.BeginFrame();
 	}
 
 	void VulkanRendererAPI::BeginCommandBuffer()
 	{
-		//VulkanCommandBufferManager::BeginRecording(
-		//	m_FramesData[m_CurrentFrameIndex].commandBuffer	,
-		//	VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT		,
-		//	nullptr);
+		VulkanCommandBuffer::Reset(
+			m_FramesData.m_CommandBuffers[m_CurrentFrameIndex]
+		);
+
+		VulkanCommandBuffer::BeginRecording(
+			m_FramesData.m_CommandBuffers[m_CurrentFrameIndex],
+			VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+			nullptr
+		);
 	}
 
 	void VulkanRendererAPI::EndCommandBuffer()
 	{
-		//VulkanCommandBufferManager::EndRecording(
-		//	m_FramesData[m_CurrentFrameIndex].commandBuffer);
+		VulkanCommandBuffer::EndRecording(
+			m_FramesData.m_CommandBuffers[m_CurrentFrameIndex]
+		);
 	}
 
 	void VulkanRendererAPI::ExecuteCommandBuffer()
 	{
-		//EndCommandBuffer();
+		VulkanContext* context = VulkanContext::GetContext();
+		VulkanSwapchain* swapchain = &context->GetContextData().m_Swapchain;
+		VkQueue graphicsQueue = context->GetContextData().m_LogicalDevice.GetGraphicsQueue();
 
-		//VkSemaphoreSubmitInfo signalInfo = {};
-		//signalInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
-		//signalInfo.pNext = nullptr;
-		//signalInfo.value = 1;
-		//signalInfo.stageMask = VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT; // restrain first sync scope
-		//signalInfo.semaphore = m_FramesData[m_CurrentFrameIndex].renderFinishedSemahore;
-		//signalInfo.deviceIndex = 0;
+		VkSemaphoreSubmitInfo waitInfo = {};
+		waitInfo.sType			= VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+		waitInfo.pNext			= nullptr;
+		waitInfo.semaphore		= m_FramesData.m_ImageAcquireSemaphore[m_CurrentFrameIndex];
+		waitInfo.stageMask		= VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT; // restrict 2nd sync scope
+		waitInfo.deviceIndex	= 0;
+		waitInfo.value			= 1;
 
-		//VkSemaphoreSubmitInfo waitInfo = {};
-		//waitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
-		//waitInfo.pNext = nullptr;
-		//waitInfo.value = 1;
-		//waitInfo.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT; // restrain second sync scope
-		//waitInfo.semaphore = m_FramesData[m_CurrentFrameIndex].imageAcquireSemaphore;
-		//waitInfo.deviceIndex = 0;
+		VkSemaphoreSubmitInfo signalInfo = {};
+		signalInfo.sType		= VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+		signalInfo.pNext		= nullptr;
+		signalInfo.semaphore	= m_FramesData.m_RenderFinishedSemaphore[swapchain->GetNextImageIndex()];
+		signalInfo.stageMask	= VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT;
+		signalInfo.deviceIndex	= 0;
+		signalInfo.value		= 1;
 
-		//VkCommandBufferSubmitInfo cmdSubmitInfo = {};
-		//cmdSubmitInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
-		//cmdSubmitInfo.pNext = nullptr;
-		//cmdSubmitInfo.commandBuffer = m_FramesData[m_CurrentFrameIndex].commandBuffer.GetRaw();
-		//cmdSubmitInfo.deviceMask = 0;
+		VkCommandBufferSubmitInfo cmdSubmitInfo = {};
+		cmdSubmitInfo.sType			= VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
+		cmdSubmitInfo.pNext			= nullptr;
+		cmdSubmitInfo.commandBuffer = m_FramesData.m_CommandBuffers[m_CurrentFrameIndex].GetRaw();
+		cmdSubmitInfo.deviceMask	= 1;
 
-		//VkSubmitInfo2 submitInfo = {};
-		//submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2;
-		//submitInfo.pNext = nullptr;
-		//submitInfo.flags = 0;
-		//submitInfo.waitSemaphoreInfoCount = 1;
-		//submitInfo.pWaitSemaphoreInfos = &waitInfo;
-		//submitInfo.commandBufferInfoCount = 1;
-		//submitInfo.pCommandBufferInfos = &cmdSubmitInfo;
-		//submitInfo.signalSemaphoreInfoCount = 1;
-		//submitInfo.pSignalSemaphoreInfos = &signalInfo;
+		VkSubmitInfo2 submitInfo = {};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2;
+		submitInfo.pNext = nullptr;
+		submitInfo.flags = 0;
+		submitInfo.waitSemaphoreInfoCount	= 1;
+		submitInfo.pWaitSemaphoreInfos		= &waitInfo;
+		submitInfo.commandBufferInfoCount	= 1;
+		submitInfo.pCommandBufferInfos		= &cmdSubmitInfo;
+		submitInfo.signalSemaphoreInfoCount = 1;
+		submitInfo.pSignalSemaphoreInfos	= &signalInfo;
 
-		//VulkanGraphicsContextBuilder* contextBuilder = VulkanGraphicsContextBuilder::GetContext();
-		//VK_CHECK(vkQueueSubmit2(
-		//	contextBuilder->GetVulkanLogicalDevice()->GetGraphicsQueue(), 
-		//	1, 
-		//	&submitInfo, 
-		//	m_FramesData[m_CurrentFrameIndex].workDoneFence
-		//));
+		EndCommandBuffer();
+
+		VulkanCommandBuffer::Submit(
+			m_FramesData.m_CommandBuffers[m_CurrentFrameIndex],
+			graphicsQueue,
+			1,
+			&submitInfo,
+			m_FramesData.m_WorkDoneFences[m_CurrentFrameIndex]
+		);
 	}
 
 	void VulkanRendererAPI::EndFrame()
 	{
-		//m_Swapchain->EndFrame();
-
-		//m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % FRAMES_IN_FLIGHT;
+		VulkanContext* context = VulkanContext::GetContext();
+		context->GetContextData().m_Swapchain.EndFrame();
 	}
 
 	void VulkanRendererAPI::Shutdown()
 	{
-		//KVAZAR_DEBUG("[VulkanRendererAPI] Shutdown() called");
-		//m_Swapchain.reset();
+		VulkanContext* context = VulkanContext::GetContext();
+		vkDeviceWaitIdle(
+			context->GetContextData().m_LogicalDevice.GetDevice()
+		);
+
+		for (uint32_t i = 0; i < FRAMES_IN_FLIGHT; i++)
+		{
+			VulkanCommandPool::Destroy(
+				m_FramesData.m_CommandPools[i]
+			);
+
+			vkDestroySemaphore(
+				context->GetContextData().m_LogicalDevice.GetDevice(),
+				m_FramesData.m_ImageAcquireSemaphore[i],
+				nullptr
+			);
+
+			vkDestroySemaphore(
+				context->GetContextData().m_LogicalDevice.GetDevice(),
+				m_FramesData.m_RenderFinishedSemaphore[i],
+				nullptr
+			);
+
+			vkDestroyFence(
+				context->GetContextData().m_LogicalDevice.GetDevice(),
+				m_FramesData.m_WorkDoneFences[i],
+				nullptr
+			);
+		}
 	}
 
 	void VulkanRendererAPI::ClearImage()
 	{
-		/*VkClearColorValue clearValue;
-		float flashColor = std::abs(std::sin(glfwGetTime()));
-		clearValue = { {0.0f, 0.0f, flashColor, 1.0f} };
+		VulkanContext* context = VulkanContext::GetContext();
+		VulkanSwapchain* swapchain = &context->GetContextData().m_Swapchain;
 
-		VkImageSubresourceRange subresRange = {};
-		subresRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		subresRange.baseArrayLayer = 0;
-		subresRange.layerCount = VK_REMAINING_MIP_LEVELS;
-		subresRange.baseMipLevel = 0;
-		subresRange.levelCount = VK_REMAINING_ARRAY_LAYERS;
+		VkClearColorValue clearValue;
+		float flashColor = std::abs(std::sin(glfwGetTime()));
+		clearValue = { {0.0f, flashColor, 0.0f, 1.0f} };
+
+		VkImageSubresourceRange range = {};
+		range.aspectMask		= VK_IMAGE_ASPECT_COLOR_BIT;
+		range.baseArrayLayer	= 0;
+		range.baseMipLevel		= 0;
+		range.layerCount		= 1;
+		range.levelCount		= 1;
 
 		Utils::TransitionImageLayout(
-			m_FramesData[m_CurrentFrameIndex].commandBuffer,
-			m_Swapchain->GetNextImage(),
-			VK_IMAGE_LAYOUT_UNDEFINED,
+			m_FramesData.m_CommandBuffers[m_CurrentFrameIndex],
+			swapchain->GetNextImage(),
+			VK_IMAGE_LAYOUT_UNDEFINED, 
 			VK_IMAGE_LAYOUT_GENERAL
-			);
+		);
 
 		vkCmdClearColorImage(
-			m_FramesData[m_CurrentFrameIndex].commandBuffer.GetRaw(),
-			m_Swapchain->GetNextImage(),
+			m_FramesData.m_CommandBuffers[m_CurrentFrameIndex].GetRaw(),
+			swapchain->GetNextImage(),
 			VK_IMAGE_LAYOUT_GENERAL,
 			&clearValue,
 			1,
-			&subresRange
+			&range
 		);
 
 		Utils::TransitionImageLayout(
-			m_FramesData[m_CurrentFrameIndex].commandBuffer,
-			m_Swapchain->GetNextImage(),
-			VK_IMAGE_LAYOUT_GENERAL,
+			m_FramesData.m_CommandBuffers[m_CurrentFrameIndex],
+			swapchain->GetNextImage(),
+			VK_IMAGE_LAYOUT_GENERAL, 
 			VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
-		);*/
+		);
 	}
 
 }

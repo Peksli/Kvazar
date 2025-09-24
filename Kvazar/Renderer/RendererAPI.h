@@ -22,12 +22,11 @@ namespace Kvazar {
 
 		virtual void Init()					= 0;
 		virtual void BeginFrame()			= 0;
+		virtual void EndFrame()				= 0;
 		virtual void BeginCommandBuffer()	= 0;
 		virtual void EndCommandBuffer()		= 0;
 		virtual void ExecuteCommandBuffer() = 0;
-		virtual void EndFrame()				= 0;
 		virtual void Shutdown()				= 0;
-
 		virtual void ClearImage()			= 0;
 
 		static void SetApiType(ApiType type) { s_ApiType = type; }

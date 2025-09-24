@@ -15,23 +15,11 @@ namespace Kvazar {
 
 		VkCommandPool& GetRaw() { return m_CommandPool; }
 
+		static void Create(VulkanCommandPool& commandPool, VkCommandPoolCreateFlagBits bufferUsageMask, uint32_t queueFamilyIndex);
+		static void Destroy(VulkanCommandPool& commandPool);
+
 	private:
 		VkCommandPool m_CommandPool = VK_NULL_HANDLE;
-	};
-
-	class VulkanCommandPoolManager
-	{
-	public:
-		VulkanCommandPoolManager() = default;
-		virtual ~VulkanCommandPoolManager() = default;
-
-		static void Create(
-			VulkanCommandPool&			 commandPool,
-			VkCommandPoolCreateFlagBits  bufferUsageMask,
-			uint32_t					 queueFamilyIndex);
-
-		static void Destroy(
-			VulkanCommandPool& commandPool);
 	};
 
 
@@ -52,55 +40,42 @@ namespace Kvazar {
 		Secondary	= 1
 	};
 
-	class VulkanCommandBuffer
+	struct VulkanCommandBufferData
 	{
-	public:
-		VulkanCommandBuffer() = default;
-		virtual ~VulkanCommandBuffer() = default;
-
-		void SetState(CommandBufferState state) { m_State = state; }
-		void SetLevel(CommandBufferLevel level) { m_Level = level; }
-
-		VkCommandBuffer& GetRaw() { return m_CommandBuffer; }
-		CommandBufferState GetState() const { return m_State; }
-		CommandBufferLevel GetLevel() const { return m_Level; }
-
-	private:
 		VkCommandBuffer m_CommandBuffer = VK_NULL_HANDLE;
 
 		CommandBufferState m_State;
 		CommandBufferLevel m_Level;
 	};
 
-	class VulkanCommandBufferManager
+	class VulkanCommandBuffer
 	{
 	public:
-		VulkanCommandBufferManager() = default;
-		virtual ~VulkanCommandBufferManager() = default;
+		VulkanCommandBuffer() = default;
+		virtual ~VulkanCommandBuffer() = default;
 
-		static void Allocate(
-			VulkanCommandBuffer&	cmdBuffer,
-			VulkanCommandPool&		commandPool,
-			CommandBufferLevel		level,
-			uint32_t				commandBufferCount);
+		void SetState(CommandBufferState state) { m_Data.m_State = state; }
+		void SetLevel(CommandBufferLevel level) { m_Data.m_Level = level; }
 
-		static void BeginRecording(
-			VulkanCommandBuffer&					commandBuffer,
-			VkCommandBufferUsageFlags				bufferUsageMask, 
-			const VkCommandBufferInheritanceInfo*	pInh);
+		VkCommandBuffer&	GetRaw()			{ return m_Data.m_CommandBuffer;	}
+		CommandBufferState	GetState() const	{ return m_Data.m_State;			}
+		CommandBufferLevel	GetLevel() const	{ return m_Data.m_Level;			}
 
-		static void EndRecording(
-			VulkanCommandBuffer& commandBuffer);
+		static void Allocate(VulkanCommandBuffer& cmdBuffer, VulkanCommandPool& commandPool, CommandBufferLevel	level,
+			uint32_t commandBufferCount);
 
-		static void Submit(
-			VulkanCommandBuffer&	cmdBuffer,
-			VkQueue					dstQueue,
-			uint32_t				submitCount,
-			const VkSubmitInfo2*	pSubmits,
-			VkFence					fence);
+		static void BeginRecording(VulkanCommandBuffer& commandBuffer, VkCommandBufferUsageFlags bufferUsageMask, 
+			const VkCommandBufferInheritanceInfo* pInh);
 
-		static void Reset(
-		VulkanCommandBuffer&		cmdBuffer);
+		static void EndRecording(VulkanCommandBuffer& commandBuffer);
+
+		static void Submit(VulkanCommandBuffer& cmdBuffer, VkQueue dstQueue, uint32_t submitCount, 
+			const VkSubmitInfo2* pSubmits, VkFence	fence);
+
+		static void Reset(VulkanCommandBuffer& cmdBuffer);
+
+	private:
+		VulkanCommandBufferData m_Data;
 	};
 
 }

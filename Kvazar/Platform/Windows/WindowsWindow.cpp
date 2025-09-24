@@ -25,7 +25,13 @@ namespace Kvazar {
 		glfwInit();
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-		m_WindowData.window = glfwCreateWindow(m_WindowData.m_Width, m_WindowData.m_Height, m_WindowData.m_Title, nullptr, nullptr);
+		m_WindowData.window = glfwCreateWindow(
+			m_WindowData.m_Width, 
+			m_WindowData.m_Height, 
+			m_WindowData.m_Title, 
+			nullptr, 
+			nullptr
+		);
 
 		if (!m_WindowData.window)
 		{

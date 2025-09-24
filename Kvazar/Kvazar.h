@@ -21,5 +21,4 @@
 #include "Renderer/GraphicsContext.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RendererAPI.h"
-#include "Renderer/Surface.h"
 #include "Renderer/SwapChain.h"

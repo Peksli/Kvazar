@@ -6,27 +6,14 @@
 
 namespace Kvazar {
 
-	//std::shared_ptr<GraphicsContextBuilder> GraphicsContextBuilder::GetTypeOfContext(const GraphicsContextSpecification& specification)
-	//{
-	//	switch (Renderer::GetApiType())
-	//	{
-	//	case ApiType::None:		KVAZAR_CRITICAL("Didn't select any API"); break;
-	//	case ApiType::Vulkan:	return std::make_shared<VulkanGraphicsContextBuilder>(specification); break;
-	//	default: KVAZAR_CRITICAL("Undefined erorr occured in GraphicsContext::CreateContext()");
-	//	}
-
-	//	return nullptr;
-	//}
-
-
 	ContextCreator::ContextCreator()
 	{
-
+		KVAZAR_DEBUG("[ContextCreator] ContextCreator() called");
 	}
 
 	ContextCreator::~ContextCreator()
 	{
-
+		KVAZAR_DEBUG("[ContextCreator] ~ContextCreator() called");
 	}
 
 	std::shared_ptr<Context> ContextCreator::Create(const ContextSpec& spec)

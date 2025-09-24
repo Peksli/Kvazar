@@ -11,15 +11,16 @@
 
 namespace Kvazar {
 
-	constexpr uint8_t FRAMES_IN_FLIGHT = 2;
+	constexpr uint8_t FRAMES_IN_FLIGHT = 2; // internal linkage
 
-	struct FrameData
+	struct FramesData
 	{
-		VkSemaphore imageAcquireSemaphore, renderFinishedSemahore;
-		VkFence		workDoneFence;
+		std::vector<VkFence>		m_WorkDoneFences;
+		std::vector<VkSemaphore>	m_ImageAcquireSemaphore;
+		std::vector<VkSemaphore>	m_RenderFinishedSemaphore;
 
-		VkCommandPool commandPool;
-		VkCommandBuffer commandBuffer;
+		std::vector<VulkanCommandBuffer>	m_CommandBuffers;
+		std::vector<VulkanCommandPool>		m_CommandPools;
 	};
 
 	class VulkanRendererAPI : public RendererAPI
@@ -37,13 +38,13 @@ namespace Kvazar {
 		virtual void ExecuteCommandBuffer() override;
 		virtual void ClearImage()			override;
 
-		static FrameData& GetCurrentFrameData() { return m_FramesData[m_CurrentFrameIndex]; }
+		static FramesData& GetFramesData() { return m_FramesData;			}
+		static uint8_t GetNextFrameIndex() { return m_CurrentFrameIndex;	}
+		static void SetNextFrameIndex() { m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % FRAMES_IN_FLIGHT; }
 
 	private:
-		//std::shared_ptr<VulkanSwapchain> m_Swapchain;
-
-		static std::array<FrameData, FRAMES_IN_FLIGHT> m_FramesData;
-		static uint8_t m_CurrentFrameIndex;
+		static FramesData	m_FramesData;
+		static uint8_t		m_CurrentFrameIndex;
 	};
 
 }
