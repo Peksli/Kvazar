@@ -21,8 +21,12 @@ namespace Kvazar {
 	namespace Utils {
 
 		void TransitionImageLayout(
-			VulkanCommandBuffer&	commandBuffer,
+			VulkanCommandBuffer& commandBuffer,
 			VkImage					image,
+			VkPipelineStageFlags2	srcStageMask,
+			VkAccessFlags2			srcAccessMask,
+			VkPipelineStageFlags2	dstStageMask,
+			VkAccessFlags2			dstAccessMask,
 			VkImageLayout			oldLayout,
 			VkImageLayout			newLayout
 		);

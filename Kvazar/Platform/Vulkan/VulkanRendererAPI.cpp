@@ -216,14 +216,18 @@ namespace Kvazar {
 		Utils::TransitionImageLayout(
 			m_FramesData.m_CommandBuffers[m_CurrentFrameIndex],
 			swapchain->GetNextImage(),
+			VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT,
+			0,
+			VK_PIPELINE_STAGE_2_CLEAR_BIT,
+			VK_ACCESS_2_TRANSFER_WRITE_BIT_KHR,
 			VK_IMAGE_LAYOUT_UNDEFINED, 
-			VK_IMAGE_LAYOUT_GENERAL
+			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
 		);
 
 		vkCmdClearColorImage(
 			m_FramesData.m_CommandBuffers[m_CurrentFrameIndex].GetRaw(),
 			swapchain->GetNextImage(),
-			VK_IMAGE_LAYOUT_GENERAL,
+			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 			&clearValue,
 			1,
 			&range
@@ -232,7 +236,11 @@ namespace Kvazar {
 		Utils::TransitionImageLayout(
 			m_FramesData.m_CommandBuffers[m_CurrentFrameIndex],
 			swapchain->GetNextImage(),
-			VK_IMAGE_LAYOUT_GENERAL, 
+			VK_PIPELINE_STAGE_2_CLEAR_BIT,
+			VK_ACCESS_2_TRANSFER_WRITE_BIT_KHR,
+			VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT,
+			0,
+			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 			VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 		);
 	}

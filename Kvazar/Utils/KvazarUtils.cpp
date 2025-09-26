@@ -5,27 +5,23 @@ namespace Kvazar {
 
 	namespace Utils {
 
-		/*
-		Actually we can have srcStage(producer) - bottom of pipe
-		and dstStage(consumer) - top of pipe <=> sync scopes
-
-		But in such a case we will wait till last frame in flight in finished, which is not good
-		because GPU is idling
-		*/
-
 		void TransitionImageLayout(
 			VulkanCommandBuffer&	commandBuffer, 
 			VkImage					image, 
-			VkImageLayout			oldLayout, 
+			VkPipelineStageFlags2	srcStageMask,
+			VkAccessFlags2			srcAccessMask,
+			VkPipelineStageFlags2	dstStageMask,
+			VkAccessFlags2			dstAccessMask,
+			VkImageLayout			oldLayout,
 			VkImageLayout			newLayout)
 		{
 			VkImageMemoryBarrier2 imageBarrier{ .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
 			imageBarrier.pNext = nullptr;
 
-			imageBarrier.srcStageMask	= VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT; // first sync scope
-			imageBarrier.srcAccessMask	= VK_ACCESS_2_MEMORY_WRITE_BIT;
-			imageBarrier.dstStageMask	= VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT; // second sync scope
-			imageBarrier.dstAccessMask	= VK_ACCESS_2_MEMORY_WRITE_BIT | VK_ACCESS_2_MEMORY_READ_BIT; 
+			imageBarrier.srcStageMask	= srcStageMask; // first sync scope
+			imageBarrier.srcAccessMask	= srcAccessMask;
+			imageBarrier.dstStageMask	= dstStageMask; // second sync scope
+			imageBarrier.dstAccessMask	= dstAccessMask;
 
 			imageBarrier.oldLayout = oldLayout;
 			imageBarrier.newLayout = newLayout;
