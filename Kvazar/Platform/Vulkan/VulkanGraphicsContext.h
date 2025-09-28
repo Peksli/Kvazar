@@ -20,9 +20,9 @@ namespace Kvazar {
 		GLFWwindow*				m_Window = nullptr;
 		VkSurfaceKHR			m_Surface;
 
-		VkInstance				m_Instance;
-		VkDebugMessenger		m_DebugMessenger;
-		VkPhysicalDevice		m_PhysicalDevice;
+		VkInstance				m_Instance			= VK_NULL_HANDLE;
+		VkDebugMessenger		m_DebugMessenger	= VK_NULL_HANDLE;
+		VkPhysicalDevice		m_PhysicalDevice	= VK_NULL_HANDLE;
 		VulkanLogicalDevice		m_LogicalDevice;
 		VulkanSwapchain			m_Swapchain;
 	};

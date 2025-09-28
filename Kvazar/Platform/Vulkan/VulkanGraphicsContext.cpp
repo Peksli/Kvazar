@@ -118,6 +118,9 @@ namespace Kvazar {
 		}
 
 		// Swapchain
+		VulkanSwapchainBuilder swpBuilder;
+		swpBuilder.SetFormat(VK_FORMAT_R8G8B8A8_UNORM);
+
 		int width, height;
 		glfwGetFramebufferSize(m_ContextData.m_Window, &width, &height);
 
@@ -127,11 +130,10 @@ namespace Kvazar {
 			m_ContextData.m_LogicalDevice.GetDevice(),
 			m_ContextData.m_Surface 
 		};
-		m_ContextData.m_Swapchain.SetFormat(VK_FORMAT_R8G8B8A8_UNORM); // maybe won't be hardcoded
 
 		vkb::Swapchain vkbSwapchain = swapchainBuilder
 			.set_desired_format(VkSurfaceFormatKHR{ 
-			.format = m_ContextData.m_Swapchain.GetFormat(), 
+			.format = m_ContextData.m_Swapchain.GetSwapchainData().m_ImagesFormat,
 			.colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR})
 			.set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)
 			.set_desired_extent(width, height)
@@ -146,31 +148,30 @@ namespace Kvazar {
 		}
 		else
 		{ 
-			KVAZAR_DEBUG("[Swapchain] Creating swapchain..."); 
-			m_ContextData.m_Swapchain.SetExtent2D(vkbSwapchain.extent);
-			m_ContextData.m_Swapchain.SetRaw(vkbSwapchain.swapchain);
-			m_ContextData.m_Swapchain.SetImages(vkbSwapchain.get_images().value());
-			m_ContextData.m_Swapchain.SetImageViews(vkbSwapchain.get_image_views().value());
+			KVAZAR_DEBUG("[Swapchain] Creating swapchain...");
+
+			m_ContextData.m_Swapchain = swpBuilder
+				.SetRaw(vkbSwapchain.swapchain)
+				.SetExtent2D(vkbSwapchain.extent)
+				.SetImages(vkbSwapchain.get_images().value())
+				.SetImageViews(vkbSwapchain.get_image_views().value())
+				.Build();
+
+			m_ContextData.m_Swapchain.Init();
 		}
 	}
 
 	void VulkanContext::Shutdown()
 	{
 		// Swapchain
-		vkDestroySwapchainKHR(m_ContextData.m_LogicalDevice.GetDevice(), m_ContextData.m_Swapchain.GetRaw(), nullptr);
-		for (int i = 0; i < m_ContextData.m_Swapchain.GetImages().size(); i++)
-		{
-			vkDestroyImageView(
-				m_ContextData.m_LogicalDevice.GetDevice(),
-				m_ContextData.m_Swapchain.GetImageViews()[i],
-				nullptr);
-		}
+		m_ContextData.m_Swapchain.Shutdown();
 
 		// Surface
 		KVAZAR_DEBUG("[Surface] Destroying surface...");
 		vkDestroySurfaceKHR(m_ContextData.m_Instance, m_ContextData.m_Surface, nullptr);
 
 		// Logical device
+		KVAZAR_DEBUG("[Logical device] Destroying logical device...");
 		vkDestroyDevice(m_ContextData.m_LogicalDevice.GetDevice(), nullptr);
 
 		// Debug messenger

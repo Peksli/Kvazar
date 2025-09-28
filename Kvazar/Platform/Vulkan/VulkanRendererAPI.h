@@ -38,9 +38,9 @@ namespace Kvazar {
 		virtual void ExecuteCommandBuffer() override;
 		virtual void ClearImage()			override;
 
-		static FramesData& GetFramesData() { return m_FramesData;			}
-		static uint8_t GetNextFrameIndex() { return m_CurrentFrameIndex;	}
-		static void SetNextFrameIndex() { m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % FRAMES_IN_FLIGHT; }
+		static FramesData& GetFramesData()	{ return m_FramesData;			}
+		static uint8_t GetNextFrameIndex()	{ return m_CurrentFrameIndex;	}
+		static void SetNextFrameIndex()		{ m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % FRAMES_IN_FLIGHT; }
 
 	private:
 		static FramesData	m_FramesData;

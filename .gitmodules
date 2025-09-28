@@ -1,3 +1,6 @@
 [submodule "Kvazar/3rdparty/vk-bootstrap"]
 	path = Kvazar/3rdparty/vk-bootstrap
 	url = https://github.com/charles-lunarg/vk-bootstrap
+[submodule "Kvazar/3rdparty/VMA"]
+	path = Kvazar/3rdparty/VMA
+	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git

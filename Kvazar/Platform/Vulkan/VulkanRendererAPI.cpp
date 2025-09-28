@@ -24,6 +24,8 @@ namespace Kvazar {
 	void VulkanRendererAPI::Init()
 	{
 		VulkanContext* context = VulkanContext::GetContext();
+		//context->GetContextData().m_Swapchain.Init();
+
 		m_CurrentFrameIndex = 0;
 
 		VkSemaphoreCreateInfo semaphoreInfo = {};
@@ -150,7 +152,6 @@ namespace Kvazar {
 		EndCommandBuffer();
 
 		VulkanCommandBuffer::Submit(
-			m_FramesData.m_CommandBuffers[m_CurrentFrameIndex],
 			graphicsQueue,
 			1,
 			&submitInfo,
@@ -202,31 +203,33 @@ namespace Kvazar {
 		VulkanContext* context = VulkanContext::GetContext();
 		VulkanSwapchain* swapchain = &context->GetContextData().m_Swapchain;
 
-		VkClearColorValue clearValue;
-		float flashColor = std::abs(std::sin(glfwGetTime()));
-		clearValue = { {0.0f, flashColor, 0.0f, 1.0f} };
-
-		VkImageSubresourceRange range = {};
-		range.aspectMask		= VK_IMAGE_ASPECT_COLOR_BIT;
-		range.baseArrayLayer	= 0;
-		range.baseMipLevel		= 0;
-		range.layerCount		= 1;
-		range.levelCount		= 1;
+		const VulkanSwapchainData& swapchainData = swapchain->GetSwapchainData();
 
 		Utils::TransitionImageLayout(
 			m_FramesData.m_CommandBuffers[m_CurrentFrameIndex],
-			swapchain->GetNextImage(),
+			swapchainData.m_OffscreenImages[swapchain->GetNextImageIndex()].m_Image,
 			VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT,
 			0,
-			VK_PIPELINE_STAGE_2_CLEAR_BIT,
+			VK_PIPELINE_STAGE_2_TRANSFER_BIT,
 			VK_ACCESS_2_TRANSFER_WRITE_BIT_KHR,
-			VK_IMAGE_LAYOUT_UNDEFINED, 
+			VK_IMAGE_LAYOUT_UNDEFINED,
 			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
 		);
 
+		VkClearColorValue clearValue;
+		float flashColor = static_cast<float>(std::abs(std::sin(glfwGetTime())));
+		clearValue = { {0.0f, flashColor, 0.0f, 1.0f} };
+
+		VkImageSubresourceRange range = {};
+		range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		range.baseArrayLayer = 0;
+		range.baseMipLevel = 0;
+		range.layerCount = 1;
+		range.levelCount = 1;
+
 		vkCmdClearColorImage(
 			m_FramesData.m_CommandBuffers[m_CurrentFrameIndex].GetRaw(),
-			swapchain->GetNextImage(),
+			swapchainData.m_OffscreenImages[swapchain->GetNextImageIndex()].m_Image,
 			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 			&clearValue,
 			1,
@@ -235,14 +238,45 @@ namespace Kvazar {
 
 		Utils::TransitionImageLayout(
 			m_FramesData.m_CommandBuffers[m_CurrentFrameIndex],
-			swapchain->GetNextImage(),
-			VK_PIPELINE_STAGE_2_CLEAR_BIT,
+			swapchainData.m_OffscreenImages[swapchain->GetNextImageIndex()].m_Image,
+			VK_PIPELINE_STAGE_2_TRANSFER_BIT,
 			VK_ACCESS_2_TRANSFER_WRITE_BIT_KHR,
+			VK_PIPELINE_STAGE_2_TRANSFER_BIT,
+			VK_ACCESS_2_TRANSFER_READ_BIT,
+			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL
+		);
+
+		Utils::TransitionImageLayout(
+			m_FramesData.m_CommandBuffers[m_CurrentFrameIndex],
+			swapchain->GetNextImage(),
+			VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT,
+			0,
+			VK_PIPELINE_STAGE_2_TRANSFER_BIT,
+			VK_ACCESS_2_TRANSFER_WRITE_BIT,
+			VK_IMAGE_LAYOUT_UNDEFINED,
+			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+		);
+
+		Utils::BlitImageToImage(
+			m_FramesData.m_CommandBuffers[m_CurrentFrameIndex],
+			swapchainData.m_OffscreenImages[swapchain->GetNextImageIndex()].m_Image,
+			swapchain->GetNextImage(),
+			swapchainData.m_OffscreenImages[swapchain->GetNextImageIndex()].m_Extent,
+			context->GetContextData().m_Swapchain.GetSwapchainData().m_ImagesExtent3D
+		);
+
+		Utils::TransitionImageLayout(
+			m_FramesData.m_CommandBuffers[m_CurrentFrameIndex],
+			swapchain->GetNextImage(),
+			VK_PIPELINE_STAGE_2_TRANSFER_BIT,
+			VK_ACCESS_2_TRANSFER_WRITE_BIT,
 			VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT,
 			0,
 			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 			VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 		);
 	}
+
 
 }

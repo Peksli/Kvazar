@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Renderer/SwapChain.h"
+#include "Platform/Vulkan/VulkanImage.h"
+
 
 #include <vector>
 
@@ -9,13 +11,26 @@ namespace Kvazar {
 
 	struct VulkanSwapchainData
 	{
-		uint32_t					m_NextImageIndex = 0;
-		VkSwapchainKHR				m_Swapchain;
-		VkFormat					m_ImagesFormat;
-		VkExtent2D					m_ImagesExtent;
-		std::vector<VkImage>		m_Images;
-		std::vector<VkImageView>	m_ImageViews;
+		VulkanSwapchainData();
+		virtual ~VulkanSwapchainData();
+
+		VulkanSwapchainData(VulkanSwapchainData&& rData);
+		VulkanSwapchainData& operator=(VulkanSwapchainData&& rData);
+
+		void Reset();
+
+		uint32_t                    m_NextImageIndex	= 0;
+		VkSwapchainKHR              m_Swapchain			= VK_NULL_HANDLE;
+		VkFormat                    m_ImagesFormat		= VK_FORMAT_UNDEFINED;
+		VkExtent2D                  m_ImagesExtent2D{};
+		VkExtent3D                  m_ImagesExtent3D{};
+		std::vector<VkImage>        m_Images;
+		std::vector<VkImageView>    m_ImageViews;
+		std::vector<AllocatedImage> m_OffscreenImages;
+
+		VulkanMemAllocator          m_Allocator;
 	};
+
 
 	class VulkanSwapchain : public Swapchain
 	{
@@ -23,26 +38,42 @@ namespace Kvazar {
 		VulkanSwapchain();
 		virtual ~VulkanSwapchain();
 
+		VulkanSwapchain(VulkanSwapchainData&& rData);
+		VulkanSwapchain(VulkanSwapchain&& rSwapchain) noexcept;
+		VulkanSwapchain& operator=(VulkanSwapchain&& rSwapchain) noexcept;
+
+		virtual void Init()			override;
 		virtual void BeginFrame()	override;
 		virtual void EndFrame()		override;
+		virtual void Shutdown()		override;
 
-		void SetRaw(VkSwapchainKHR swapchain)						{ m_SwapchainData.m_Swapchain = swapchain;	}
-		void SetFormat(VkFormat format)								{ m_SwapchainData.m_ImagesFormat = format;	}
-		void SetExtent2D(const VkExtent2D& extent)					{ m_SwapchainData.m_ImagesExtent = extent;	}
-		void SetImages(const std::vector<VkImage>& images)			{ m_SwapchainData.m_Images = images;		}
-		void SetImageViews(const std::vector<VkImageView>& views)	{ m_SwapchainData.m_ImageViews = views;		}
+		uint32_t	GetNextImageIndex() { return m_SwapchainData.m_NextImageIndex;								}
+		VkImage		GetNextImage()		{ return m_SwapchainData.m_Images[m_SwapchainData.m_NextImageIndex];	}
 
-		VkSwapchainKHR				GetRaw()		{ return m_SwapchainData.m_Swapchain;		}
-		VkFormat					GetFormat()		{ return m_SwapchainData.m_ImagesFormat;	}
-		VkExtent2D					GetExtent2D()	{ return m_SwapchainData.m_ImagesExtent;	}
-		std::vector<VkImage>&		GetImages()		{ return m_SwapchainData.m_Images;			}
-		std::vector<VkImageView>&	GetImageViews()	{ return m_SwapchainData.m_ImageViews;		}
-
-		uint32_t GetNextImageIndex() { return m_SwapchainData.m_NextImageIndex; }
-		VkImage GetNextImage() { return m_SwapchainData.m_Images[m_SwapchainData.m_NextImageIndex]; }
+		const VulkanSwapchainData& GetSwapchainData() const { return m_SwapchainData; }
 
 	private:
 		VulkanSwapchainData m_SwapchainData;
+	};
+
+
+	class VulkanSwapchainBuilder
+	{
+	public:
+		VulkanSwapchainBuilder();
+		virtual ~VulkanSwapchainBuilder();
+
+		VulkanSwapchainBuilder& SetRaw(VkSwapchainKHR swapchain);
+		VulkanSwapchainBuilder& SetFormat(VkFormat format);
+		VulkanSwapchainBuilder& SetExtent2D(const VkExtent2D& extent);
+		VulkanSwapchainBuilder& SetExtent3D(const VkExtent3D& extent3D);
+		VulkanSwapchainBuilder& SetImages(std::vector<VkImage> images);
+		VulkanSwapchainBuilder& SetImageViews(std::vector<VkImageView> views);
+
+		VulkanSwapchain Build();
+
+	private:
+		VulkanSwapchainData m_Data;
 	};
 
 }

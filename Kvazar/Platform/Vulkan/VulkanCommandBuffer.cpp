@@ -88,11 +88,9 @@ namespace Kvazar {
 		);
 	}
 
-	void VulkanCommandBuffer::Submit(VulkanCommandBuffer& cmdBuffer, VkQueue dstQueue, uint32_t submitCount,
+	void VulkanCommandBuffer::Submit(VkQueue dstQueue, uint32_t submitCount,
 		const VkSubmitInfo2* pSubmits, VkFence fence)
 	{
-		VulkanContext* context = VulkanContext::GetContext();
-
 		vkQueueSubmit2(
 			dstQueue,
 			submitCount,

@@ -44,8 +44,8 @@ namespace Kvazar {
 	{
 		VkCommandBuffer m_CommandBuffer = VK_NULL_HANDLE;
 
-		CommandBufferState m_State;
-		CommandBufferLevel m_Level;
+		CommandBufferState m_State = CommandBufferState::Initial;
+		CommandBufferLevel m_Level = CommandBufferLevel::Primary;
 	};
 
 	class VulkanCommandBuffer
@@ -69,8 +69,8 @@ namespace Kvazar {
 
 		static void EndRecording(VulkanCommandBuffer& commandBuffer);
 
-		static void Submit(VulkanCommandBuffer& cmdBuffer, VkQueue dstQueue, uint32_t submitCount, 
-			const VkSubmitInfo2* pSubmits, VkFence	fence);
+		static void Submit(VkQueue dstQueue, uint32_t submitCount, const VkSubmitInfo2* pSubmits, 
+			VkFence	fence);
 
 		static void Reset(VulkanCommandBuffer& cmdBuffer);
 
