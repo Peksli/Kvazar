@@ -3,6 +3,8 @@
 #include "Platform/Vulkan/VulkanSwapChain.h"
 #include "Renderer/RendererAPI.h"
 #include "Platform/Vulkan/VulkanCommandBuffer.h"
+#include "Platform/Vulkan/VulkanImage.h"
+#include "Platform/Vulkan/VMA.h"
 
 #include <cstdint>
 #include <memory>
@@ -21,6 +23,8 @@ namespace Kvazar {
 
 		std::vector<VulkanCommandBuffer>	m_CommandBuffers;
 		std::vector<VulkanCommandPool>		m_CommandPools;
+
+		std::vector<VulkanImage> m_OffscreenRenderTargets;
 	};
 
 	class VulkanRendererAPI : public RendererAPI
@@ -38,13 +42,18 @@ namespace Kvazar {
 		virtual void ExecuteCommandBuffer() override;
 		virtual void ClearImage()			override;
 
-		static FramesData& GetFramesData()	{ return m_FramesData;			}
-		static uint8_t GetNextFrameIndex()	{ return m_CurrentFrameIndex;	}
-		static void SetNextFrameIndex()		{ m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % FRAMES_IN_FLIGHT; }
+		static FramesData& GetFramesData() { return m_FramesData;			}
+		static uint8_t GetNextFrameIndex() { return m_CurrentFrameIndex;	}
+		static VulkanImage& GetNextOffscreenRenderTarget() { return m_FramesData.m_OffscreenRenderTargets[m_CurrentFrameIndex]; }
+		static void SetNextFrameIndex() { m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % FRAMES_IN_FLIGHT; }
 
 	private:
+		void CreateOffscreenRenderTargets();
+		void CleanupOffscreenRenderTargets();
+
 		static FramesData	m_FramesData;
 		static uint8_t		m_CurrentFrameIndex;
+		VulkanVMA			m_VMA;
 	};
 
 }

@@ -1,101 +1,88 @@
-﻿#include "Platform/Vulkan/VulkanSwapChain.h"
-#include "Platform/Vulkan/VulkanRendererAPI.h"
+#include "Platform/Vulkan/VulkanSwapChain.h"
 #include "Platform/Vulkan/VulkanGraphicsContext.h"
+#include "Platform/Vulkan/VulkanRendererAPI.h"
 #include "Core/LogSystem.h"
 #include "Utils/KvazarUtils.h"
-#include "Platform/Vulkan/VMA.h"
 
 
 namespace Kvazar {
 
-	// Swapchain data
+	/* SWAPCHAIN DATA */
 
-	VulkanSwapchainData::VulkanSwapchainData()
+	void SwapchainData::Flush()
 	{
-		KVAZAR_DEBUG("[VulkanSwapchainData] VulkanSwapchainData() constructor called!!!");
+		nextImageIndex = 0;
+		swapchain = VK_NULL_HANDLE;
+		swapchainImagesFormat = VK_FORMAT_UNDEFINED;
+		swapchainImagesExtent = { 0, 0, 0 };
+		swapchainImages.clear();
+		swapchainImageViews.clear();
 	}
 
-	VulkanSwapchainData::VulkanSwapchainData(VulkanSwapchainData&& rData)
+	void SwapchainData::Cleanup()
 	{
-		KVAZAR_DEBUG("[VulkanSwapchainData] VulkanSwapchainData(VulkanSwapchainData&& rData) constructor called!!!");
+		VulkanContext* context = VulkanContext::GetContext();
+		VkDevice logicalDevice = context->GetContextData().m_LogicalDevice.GetDevice();
 
-		m_NextImageIndex = rData.m_NextImageIndex;
-		m_Swapchain = rData.m_Swapchain;
-		m_ImagesFormat = rData.m_ImagesFormat;
-		m_ImagesExtent2D = rData.m_ImagesExtent2D;
-		m_ImagesExtent3D = rData.m_ImagesExtent3D;
+		/* IMAGE VIEWS */
+		for (VkImageView imageView : swapchainImageViews) 
+		{
+			vkDestroyImageView(logicalDevice, imageView, nullptr);
+		}
+		swapchainImageViews.clear();
 
-		m_Images = std::move(rData.m_Images);
-		m_ImageViews = std::move(rData.m_ImageViews);
-		m_OffscreenImages = std::move(rData.m_OffscreenImages);
-		m_Allocator = std::move(rData.m_Allocator);
+		/* RAW SWAPCHAIN */
+		if (swapchain != VK_NULL_HANDLE) 
+		{
+			vkDestroySwapchainKHR(logicalDevice, swapchain, nullptr);
+			swapchain = VK_NULL_HANDLE;
+		}
+		else
+		{
+			KVAZAR_CRITICAL("[VulkanSwapchain] VkSwapchainKHR is VK_NULL_HANDLE");
+		}
+
+		/* OTHER */
+		swapchainImages.clear();
+		nextImageIndex = 0;
+		swapchainImagesFormat = VK_FORMAT_UNDEFINED;
+		swapchainImagesExtent = { 0, 0, 0 };
 	}
 
-	VulkanSwapchainData& VulkanSwapchainData::operator=(VulkanSwapchainData&& rData)
+	Kvazar::SwapchainData& SwapchainData::operator=(SwapchainData&& rData)
 	{
-		KVAZAR_DEBUG("[VulkanSwapchainData] operator=(VulkanSwapchainData&& rData) called!!!");
-
 		if (this != &rData)
 		{
-			m_NextImageIndex = rData.m_NextImageIndex;
-			m_Swapchain = rData.m_Swapchain;
-			m_ImagesFormat = rData.m_ImagesFormat;
-			m_ImagesExtent2D = rData.m_ImagesExtent2D;
-			m_ImagesExtent3D = rData.m_ImagesExtent3D;
+			nextImageIndex = rData.nextImageIndex;
+			swapchain = rData.swapchain;
+			swapchainImagesFormat = rData.swapchainImagesFormat;
+			swapchainImagesExtent = rData.swapchainImagesExtent;
+			swapchainImages = std::move(rData.swapchainImages);
+			swapchainImageViews = std::move(rData.swapchainImageViews);
 
-			m_Images = std::move(rData.m_Images);
-			m_ImageViews = std::move(rData.m_ImageViews);
-			m_OffscreenImages = std::move(rData.m_OffscreenImages);
-			m_Allocator = std::move(rData.m_Allocator);
+			rData.Flush();
 		}
 
 		return *this;
 	}
 
-	VulkanSwapchainData::~VulkanSwapchainData()
-	{
-		KVAZAR_DEBUG("[VulkanSwapchainData] ~VulkanSwapchainData() called!!!");
-	}
-
-	void VulkanSwapchainData::Reset()
-	{
-		m_Swapchain = VK_NULL_HANDLE;
-		m_Images.clear();
-		m_ImageViews.clear();
-		m_OffscreenImages.clear();
-	}
-
-
-	// Vulkan swapchain
+	/* SWAPCHAIN */
 
 	VulkanSwapchain::VulkanSwapchain()
 	{
-		KVAZAR_DEBUG("[VulkanSwapchain] VulkanSwapchain() constructor called!!!");
+		KVAZAR_DEBUG("[VulkanSwapchain] VulkanSwapchain() constructor");
 	}
 
-	VulkanSwapchain::VulkanSwapchain(VulkanSwapchainData&& rData)
+	VulkanSwapchain::VulkanSwapchain(SwapchainData&& rData)
 	{
-		KVAZAR_DEBUG("[VulkanSwapchain] VulkanSwapchain(VulkanSwapchainData&& rData) constructor called!!!");
-
-		m_SwapchainData = std::move(rData);
+		m_Data = std::move(rData);
 	}
 
-	VulkanSwapchain::VulkanSwapchain(VulkanSwapchain&& rSwapchain) noexcept
+	Kvazar::VulkanSwapchain& VulkanSwapchain::operator=(VulkanSwapchain&& rSwapchain)
 	{
-		KVAZAR_DEBUG("[VulkanSwapchain] VulkanSwapchain(VulkanSwapchain&& rSwapchain) constructor called!!!");
-
-		m_SwapchainData = std::move(rSwapchain.m_SwapchainData);
-		rSwapchain.m_SwapchainData.Reset();
-	}
-
-	VulkanSwapchain& VulkanSwapchain::operator=(VulkanSwapchain&& rSwapchain) noexcept
-	{
-		KVAZAR_DEBUG("[VulkanSwapchain] operator=(VulkanSwapchain&& rSwapchain) constructor called!!!");
-
 		if (this != &rSwapchain)
 		{
-			m_SwapchainData = std::move(rSwapchain.m_SwapchainData);
-			rSwapchain.m_SwapchainData.Reset();
+			m_Data = std::move(rSwapchain.m_Data);
 		}
 
 		return *this;
@@ -103,79 +90,12 @@ namespace Kvazar {
 
 	VulkanSwapchain::~VulkanSwapchain()
 	{
-		KVAZAR_DEBUG("[VulkanSwapchain] ~VulkanSwapchain() destructor called!!!");
-	}	
+		KVAZAR_DEBUG("[VulkanSwapchain] ~VulkanSwapchain() destructor");
+	}
 
 	void VulkanSwapchain::Init()
 	{
-		KVAZAR_DEBUG("[VulkanSwapchain] Initializing swapchain!!!");
-		m_SwapchainData.m_Allocator.Init();
-		m_SwapchainData.m_OffscreenImages.resize(FRAMES_IN_FLIGHT);
-
-		VulkanContext* context = VulkanContext::GetContext();
-
-		int imageWidth, imageHeight;
-		glfwGetFramebufferSize(context->GetContextData().m_Window, &imageWidth, &imageHeight);
-
-		for (uint32_t i = 0; i < FRAMES_IN_FLIGHT; i++)
-		{
-			// Extent + format
-			VkExtent3D drawImageExtent =
-			{
-				static_cast<uint32_t>(imageWidth),
-				static_cast<uint32_t>(imageHeight),
-				1
-			};
-			m_SwapchainData.m_OffscreenImages[i].m_Extent		= drawImageExtent;
-			m_SwapchainData.m_OffscreenImages[i].m_ImageFormat	= VK_FORMAT_R16G16B16A16_SFLOAT;
-
-			// Usages
-			VkImageUsageFlags usageMask = {};
-			usageMask |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
-			usageMask |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
-			usageMask |= VK_IMAGE_USAGE_STORAGE_BIT;
-			usageMask |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-
-			// Extent
-
-			VkImageCreateInfo imageCreateInfo = Utils::CreateImageInfo(
-				m_SwapchainData.m_OffscreenImages[i].m_ImageFormat,
-				m_SwapchainData.m_OffscreenImages[i].m_Extent,
-				1,
-				1,
-				VK_SAMPLE_COUNT_1_BIT,
-				VK_IMAGE_TILING_OPTIMAL,
-				usageMask
-			);
-
-			// Want to use device local mem
-			VmaAllocationCreateInfo allocCreateInfo = {};
-			allocCreateInfo.usage			= VMA_MEMORY_USAGE_GPU_ONLY;
-			allocCreateInfo.requiredFlags	= VkMemoryPropertyFlags(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-			vmaCreateImage(
-				m_SwapchainData.m_Allocator.GetRaw(), 
-				&imageCreateInfo,
-				&allocCreateInfo,
-				&m_SwapchainData.m_OffscreenImages[i].m_Image,
-				&m_SwapchainData.m_OffscreenImages[i].m_Allocation,
-				nullptr
-			);
-
-			// Image views
-			VkImageViewCreateInfo imageViewCreateInfo = Utils::CreateImageViewInfo(
-				m_SwapchainData.m_OffscreenImages[i].m_ImageFormat,
-				m_SwapchainData.m_OffscreenImages[i].m_Image,
-				VK_IMAGE_ASPECT_COLOR_BIT
-			);
-
-			VK_CHECK(vkCreateImageView(
-				context->GetContextData().m_LogicalDevice.GetDevice(),
-				&imageViewCreateInfo,
-				nullptr,
-				&m_SwapchainData.m_OffscreenImages[i].m_ImageView
-			));
-
-		}
+		KVAZAR_DEBUG("[VulkanSwapchain] Init()");
 	}
 
 	void VulkanSwapchain::BeginFrame()
@@ -200,11 +120,11 @@ namespace Kvazar {
 
 		VK_CHECK(vkAcquireNextImageKHR(
 			context->GetContextData().m_LogicalDevice.GetDevice(),
-			m_SwapchainData.m_Swapchain,
+			m_Data.swapchain,
 			UINT64_MAX,
 			framesData.m_ImageAcquireSemaphore[currentFrameIndex],
 			VK_NULL_HANDLE,
-			&m_SwapchainData.m_NextImageIndex
+			&m_Data.nextImageIndex
 		));
 	}
 
@@ -214,14 +134,14 @@ namespace Kvazar {
 		FramesData& framesData = VulkanRendererAPI::GetFramesData();
 
 		VkPresentInfoKHR presentInfo = {};
-		presentInfo.sType				= VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-		presentInfo.pNext				= nullptr;
-		presentInfo.pSwapchains			= &m_SwapchainData.m_Swapchain;
-		presentInfo.swapchainCount		= 1;
-		presentInfo.pWaitSemaphores		= &framesData.m_RenderFinishedSemaphore[m_SwapchainData.m_NextImageIndex];
-		presentInfo.waitSemaphoreCount	= 1;
-		presentInfo.pImageIndices		= &m_SwapchainData.m_NextImageIndex;
-		presentInfo.pResults			= nullptr;
+		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+		presentInfo.pNext = nullptr;
+		presentInfo.pSwapchains = &m_Data.swapchain;
+		presentInfo.swapchainCount = 1;
+		presentInfo.pWaitSemaphores = &framesData.m_RenderFinishedSemaphore[m_Data.nextImageIndex];
+		presentInfo.waitSemaphoreCount = 1;
+		presentInfo.pImageIndices = &m_Data.nextImageIndex;
+		presentInfo.pResults = nullptr;
 
 		VK_CHECK(vkQueuePresentKHR(
 			context->GetContextData().m_LogicalDevice.GetPresentationQueue(),
@@ -233,88 +153,60 @@ namespace Kvazar {
 
 	void VulkanSwapchain::Shutdown()
 	{
-		VulkanContext* context = VulkanContext::GetContext();
-
-		for (uint32_t i = 0; i < m_SwapchainData.m_Images.size(); i++)
-		{
-			vkDestroyImageView(
-				context->GetContextData().m_LogicalDevice.GetDevice(),
-				m_SwapchainData.m_OffscreenImages[i].m_ImageView,
-				nullptr
-			);
-
-			vmaDestroyImage(
-				m_SwapchainData.m_Allocator.GetRaw(),
-				m_SwapchainData.m_OffscreenImages[i].m_Image,
-				m_SwapchainData.m_OffscreenImages[i].m_Allocation
-			);
-
-			vkDestroyImageView(
-				context->GetContextData().m_LogicalDevice.GetDevice(),
-				m_SwapchainData.m_ImageViews[i],
-				nullptr
-			);
-		}
-
-		m_SwapchainData.m_Allocator.Shutdown();
-
-		vkDestroySwapchainKHR(
-			context->GetContextData().m_LogicalDevice.GetDevice(),
-			m_SwapchainData.m_Swapchain,
-			nullptr
-		);
+		KVAZAR_DEBUG("[VulkanSwapchain] Shutdown()");
+		m_Data.Cleanup();
 	}
 
-
-	// BUILDER
+	/* SWAPCHAIN BUILDER */
 
 	VulkanSwapchainBuilder::VulkanSwapchainBuilder()
 	{
-
+		KVAZAR_DEBUG("[VulkanSwapchainBuilder] VulkanSwapchainBuilder() constructor");
 	}
 
 	VulkanSwapchainBuilder::~VulkanSwapchainBuilder()
 	{
-
+		KVAZAR_DEBUG("[VulkanSwapchainBuilder] ~VulkanSwapchainBuilder() destructor");
 	}
 
-	VulkanSwapchainBuilder& VulkanSwapchainBuilder::SetRaw(VkSwapchainKHR swapchain)
+
+	Kvazar::VulkanSwapchainBuilder& VulkanSwapchainBuilder::SetNextImageIndex(uint32_t nextImageIndex)
 	{
-		m_Data.m_Swapchain = swapchain;
+		m_Data.nextImageIndex = nextImageIndex;
 		return *this;
 	}
 
-	VulkanSwapchainBuilder& VulkanSwapchainBuilder::SetFormat(VkFormat format)
+	Kvazar::VulkanSwapchainBuilder& VulkanSwapchainBuilder::SetRawSwapchain(VkSwapchainKHR swapchain)
 	{
-		m_Data.m_ImagesFormat = format;
+		m_Data.swapchain = swapchain;
 		return *this;
 	}
 
-	VulkanSwapchainBuilder& VulkanSwapchainBuilder::SetExtent2D(const VkExtent2D& extent)
+	Kvazar::VulkanSwapchainBuilder& VulkanSwapchainBuilder::SetImagesFormat(VkFormat swapchainImagesFormat)
 	{
-		m_Data.m_ImagesExtent2D = extent;
+		m_Data.swapchainImagesFormat = swapchainImagesFormat;
 		return *this;
 	}
 
-	VulkanSwapchainBuilder& VulkanSwapchainBuilder::SetExtent3D(const VkExtent3D& extent3D)
+	Kvazar::VulkanSwapchainBuilder& VulkanSwapchainBuilder::SetImagesExtent(VkExtent3D swapchainImagesExtent)
 	{
-		m_Data.m_ImagesExtent3D = extent3D;
+		m_Data.swapchainImagesExtent = swapchainImagesExtent;
 		return *this;
 	}
 
-	VulkanSwapchainBuilder& VulkanSwapchainBuilder::SetImages(std::vector<VkImage> images)
+	Kvazar::VulkanSwapchainBuilder& VulkanSwapchainBuilder::SetImages(std::vector<VkImage>&& swapchainImages)
 	{
-		m_Data.m_Images = std::move(images);
+		m_Data.swapchainImages = std::move(swapchainImages);
 		return *this;
 	}
 
-	VulkanSwapchainBuilder& VulkanSwapchainBuilder::SetImageViews(std::vector<VkImageView> views)
+	Kvazar::VulkanSwapchainBuilder& VulkanSwapchainBuilder::SetImageViews(std::vector<VkImageView>&& swapchainImageViews)
 	{
-		m_Data.m_ImageViews = std::move(views);
+		m_Data.swapchainImageViews = std::move(swapchainImageViews);
 		return *this;
 	}
 
-	VulkanSwapchain VulkanSwapchainBuilder::Build()
+	Kvazar::VulkanSwapchain VulkanSwapchainBuilder::Build()
 	{
 		return VulkanSwapchain(std::move(m_Data));
 	}

@@ -8,7 +8,6 @@
 namespace Kvazar {
 
 	Kvazar::FramesData VulkanRendererAPI::m_FramesData;
-
 	uint8_t VulkanRendererAPI::m_CurrentFrameIndex;
 
 	VulkanRendererAPI::VulkanRendererAPI()
@@ -24,8 +23,6 @@ namespace Kvazar {
 	void VulkanRendererAPI::Init()
 	{
 		VulkanContext* context = VulkanContext::GetContext();
-		//context->GetContextData().m_Swapchain.Init();
-
 		m_CurrentFrameIndex = 0;
 
 		VkSemaphoreCreateInfo semaphoreInfo = {};
@@ -43,6 +40,9 @@ namespace Kvazar {
 		m_FramesData.m_CommandBuffers.resize(FRAMES_IN_FLIGHT);
 		m_FramesData.m_WorkDoneFences.resize(FRAMES_IN_FLIGHT);
 		m_FramesData.m_CommandPools.resize(FRAMES_IN_FLIGHT);
+
+		m_VMA.Init();
+		CreateOffscreenRenderTargets();
 
 		for (uint32_t i = 0; i < FRAMES_IN_FLIGHT; i++)
 		{
@@ -127,7 +127,7 @@ namespace Kvazar {
 		VkSemaphoreSubmitInfo signalInfo = {};
 		signalInfo.sType		= VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
 		signalInfo.pNext		= nullptr;
-		signalInfo.semaphore	= m_FramesData.m_RenderFinishedSemaphore[swapchain->GetNextImageIndex()];
+		signalInfo.semaphore	= m_FramesData.m_RenderFinishedSemaphore[swapchain->GetData().nextImageIndex];
 		signalInfo.stageMask	= VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT;
 		signalInfo.deviceIndex	= 0;
 		signalInfo.value		= 1;
@@ -196,6 +196,9 @@ namespace Kvazar {
 				nullptr
 			);
 		}
+
+		CleanupOffscreenRenderTargets();
+		m_VMA.Shutdown();
 	}
 
 	void VulkanRendererAPI::ClearImage()
@@ -203,21 +206,8 @@ namespace Kvazar {
 		VulkanContext* context = VulkanContext::GetContext();
 		VulkanSwapchain* swapchain = &context->GetContextData().m_Swapchain;
 
-		const VulkanSwapchainData& swapchainData = swapchain->GetSwapchainData();
-
-		Utils::TransitionImageLayout(
-			m_FramesData.m_CommandBuffers[m_CurrentFrameIndex],
-			swapchainData.m_OffscreenImages[swapchain->GetNextImageIndex()].m_Image,
-			VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT,
-			0,
-			VK_PIPELINE_STAGE_2_TRANSFER_BIT,
-			VK_ACCESS_2_TRANSFER_WRITE_BIT_KHR,
-			VK_IMAGE_LAYOUT_UNDEFINED,
-			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
-		);
-
 		VkClearColorValue clearValue;
-		float flashColor = static_cast<float>(std::abs(std::sin(glfwGetTime())));
+		float flashColor = std::abs(std::sin(glfwGetTime()));
 		clearValue = { {0.0f, flashColor, 0.0f, 1.0f} };
 
 		VkImageSubresourceRange range = {};
@@ -227,56 +217,120 @@ namespace Kvazar {
 		range.layerCount = 1;
 		range.levelCount = 1;
 
+		uint32_t nextImageIndex = swapchain->GetData().nextImageIndex;
+
+		/* PREPARE FOR RENDERING */
+		Utils::TransitionImageLayout(
+			m_FramesData.m_CommandBuffers[m_CurrentFrameIndex],
+			m_FramesData.m_OffscreenRenderTargets[nextImageIndex].GetImage(),
+			VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT,        
+			0,                                          
+			VK_PIPELINE_STAGE_2_TRANSFER_BIT,           
+			VK_ACCESS_2_TRANSFER_WRITE_BIT,
+			VK_IMAGE_LAYOUT_UNDEFINED,
+			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+		);
+
+		/* RENDER */
 		vkCmdClearColorImage(
 			m_FramesData.m_CommandBuffers[m_CurrentFrameIndex].GetRaw(),
-			swapchainData.m_OffscreenImages[swapchain->GetNextImageIndex()].m_Image,
+			m_FramesData.m_OffscreenRenderTargets[nextImageIndex].GetImage(),
 			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 			&clearValue,
 			1,
 			&range
 		);
 
+		/* PREPARE OFFSCREEN TARGETS FOR BLIT INTO SWAPCHAIN IMAGES */
 		Utils::TransitionImageLayout(
 			m_FramesData.m_CommandBuffers[m_CurrentFrameIndex],
-			swapchainData.m_OffscreenImages[swapchain->GetNextImageIndex()].m_Image,
-			VK_PIPELINE_STAGE_2_TRANSFER_BIT,
-			VK_ACCESS_2_TRANSFER_WRITE_BIT_KHR,
+			m_FramesData.m_OffscreenRenderTargets[nextImageIndex].GetImage(),
+			VK_PIPELINE_STAGE_2_TRANSFER_BIT,           
+			VK_ACCESS_2_TRANSFER_WRITE_BIT,             
 			VK_PIPELINE_STAGE_2_TRANSFER_BIT,
 			VK_ACCESS_2_TRANSFER_READ_BIT,
 			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 			VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL
 		);
 
+		/* PREPARE SWAPCHAIN IMAGES FOR BLIT */
 		Utils::TransitionImageLayout(
 			m_FramesData.m_CommandBuffers[m_CurrentFrameIndex],
-			swapchain->GetNextImage(),
-			VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT,
+			swapchain->GetData().GetNextImage(),
+			VK_PIPELINE_STAGE_2_NONE,                      
 			0,
 			VK_PIPELINE_STAGE_2_TRANSFER_BIT,
 			VK_ACCESS_2_TRANSFER_WRITE_BIT,
 			VK_IMAGE_LAYOUT_UNDEFINED,
 			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
 		);
-
+			
+		/* BLIT */
 		Utils::BlitImageToImage(
 			m_FramesData.m_CommandBuffers[m_CurrentFrameIndex],
-			swapchainData.m_OffscreenImages[swapchain->GetNextImageIndex()].m_Image,
-			swapchain->GetNextImage(),
-			swapchainData.m_OffscreenImages[swapchain->GetNextImageIndex()].m_Extent,
-			context->GetContextData().m_Swapchain.GetSwapchainData().m_ImagesExtent3D
+			m_FramesData.m_OffscreenRenderTargets[nextImageIndex].GetImage(),
+			swapchain->GetData().GetNextImage(),
+			m_FramesData.m_OffscreenRenderTargets[nextImageIndex].GetExtent(),
+			swapchain->GetData().swapchainImagesExtent
 		);
 
+		/* TRANSITION FOR PRESENT */
 		Utils::TransitionImageLayout(
 			m_FramesData.m_CommandBuffers[m_CurrentFrameIndex],
-			swapchain->GetNextImage(),
+			swapchain->GetData().GetNextImage(),
 			VK_PIPELINE_STAGE_2_TRANSFER_BIT,
 			VK_ACCESS_2_TRANSFER_WRITE_BIT,
-			VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT,
+			VK_PIPELINE_STAGE_2_NONE,
 			0,
 			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 			VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 		);
 	}
 
+	void VulkanRendererAPI::CreateOffscreenRenderTargets()
+	{
+		VulkanContext* context = VulkanContext::GetContext();
+		VulkanSwapchain* swapchain = &context->GetContextData().m_Swapchain;
+
+		VkExtent3D offscreenTargetsExtent3D = swapchain->GetData().swapchainImagesExtent;
+		VkFormat offscreenTargetsFormat = swapchain->GetData().swapchainImagesFormat;
+
+		m_FramesData.m_OffscreenRenderTargets.resize(FRAMES_IN_FLIGHT);
+		VulkanImageBuilder imageBuilder(
+			context->GetContextData().m_LogicalDevice.GetDevice(),
+			m_VMA.GetAllocator());
+
+		for (uint32_t i = 0; i < FRAMES_IN_FLIGHT; i++)
+		{
+			m_FramesData.m_OffscreenRenderTargets[i] = std::move(imageBuilder
+				.SetFormat(offscreenTargetsFormat)
+				.SetExtent(offscreenTargetsExtent3D)
+				.SetUsage(VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT
+					| VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
+				.SetMemPropsFlags(VkMemoryPropertyFlags(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
+				.SetMemoryUsage(VMA_MEMORY_USAGE_GPU_ONLY)
+				.SetAspect(VK_IMAGE_ASPECT_COLOR_BIT)
+				.SetLayout(VK_IMAGE_LAYOUT_UNDEFINED)
+				.Build());
+		}
+	}
+
+	void VulkanRendererAPI::CleanupOffscreenRenderTargets()
+	{
+		VulkanContext* context = VulkanContext::GetContext();
+		VkDevice device = context->GetContextData().m_LogicalDevice.GetDevice();
+
+		for (auto& target : m_FramesData.m_OffscreenRenderTargets)
+		{
+			if (target.IsValid())
+			{
+				target.Cleanup(device, m_VMA.GetAllocator());
+			}
+		}
+		m_FramesData.m_OffscreenRenderTargets.clear();
+
+		KVAZAR_DEBUG(FMT_STRING("Cleaned up, {} offscreen render targets left"), 
+			m_FramesData.m_OffscreenRenderTargets.size());
+	}
 
 }

@@ -38,7 +38,6 @@ namespace Kvazar {
 		void Shutdown();
 
 		static	VulkanContext*	GetContext()		{ return m_Context;		}
-
 		VulkanContextData&		GetContextData()	{ return m_ContextData; }
 
 	private:

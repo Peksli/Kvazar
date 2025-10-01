@@ -15,15 +15,12 @@ do {																\
 #include "Platform/Vulkan/VulkanCommandBuffer.h"
 
 
-
 namespace Kvazar {
 
 	namespace Utils {
 
-		// Barriers
-
 		void TransitionImageLayout(
-			VulkanCommandBuffer&	commandBuffer,
+			VulkanCommandBuffer& commandBuffer,
 			VkImage					image,
 			VkPipelineStageFlags2	srcStageMask,
 			VkAccessFlags2			srcAccessMask,
@@ -33,32 +30,29 @@ namespace Kvazar {
 			VkImageLayout			newLayout
 		);
 
-		// Images and image views
-
 		VkImageCreateInfo CreateImageInfo(
 			VkFormat				format,
-			VkExtent3D				imageExtent,
+			VkExtent3D				extent,
 			uint32_t				mipLevels,
 			uint32_t				arrayLayers,
 			VkSampleCountFlagBits	samples,
 			VkImageTiling			tiling,
-			VkImageUsageFlags		usageMask
+			VkImageUsageFlags		usageMask,
+			VkImageLayout			initialLayout
 		);
 
 		VkImageViewCreateInfo CreateImageViewInfo(
-			VkFormat				format,
-			VkImage					image,
-			VkImageAspectFlagBits	aspectMask
+			VkImage				image,
+			VkFormat			format,
+			VkImageAspectFlags	aspectMask
 		);
 
-		// Copy
-
 		void BlitImageToImage(
-			VulkanCommandBuffer&	commandBuffer,
-			VkImage					srcImage,
-			VkImage					dstImage,
-			VkExtent3D				srcExtent,
-			VkExtent3D				dstExtent
+			VulkanCommandBuffer& commandBuffer,
+			VkImage				 source,
+			VkImage				 destination,
+			VkExtent3D			 srcSize,
+			VkExtent3D			 dstSize
 		);
 
 	}

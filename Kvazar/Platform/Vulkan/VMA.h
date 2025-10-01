@@ -5,21 +5,16 @@
 
 namespace Kvazar {
 
-	class VulkanMemAllocator
+	class VulkanVMA
 	{
 	public:
-		VulkanMemAllocator();
-		virtual ~VulkanMemAllocator();
+		VulkanVMA();
+		virtual ~VulkanVMA();
 
-		VulkanMemAllocator(const VulkanMemAllocator&) = delete;
-		VulkanMemAllocator& operator=(const VulkanMemAllocator&) = delete;
-		VulkanMemAllocator(VulkanMemAllocator&& rVMA) noexcept;
-		VulkanMemAllocator& operator=(VulkanMemAllocator&& rVMA) noexcept;
+		VmaAllocator& GetAllocator() { return m_Allocator; }
 
 		void Init();
 		void Shutdown();
-
-		VmaAllocator GetRaw() const { return m_Allocator; }
 
 	private:
 		VmaAllocator m_Allocator;

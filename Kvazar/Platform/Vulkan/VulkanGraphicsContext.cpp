@@ -1,5 +1,6 @@
 ﻿#include "Platform/Vulkan/VulkanGraphicsContext.h"
 #include "Core/LogSystem.h"
+#include "Platform/Vulkan/VMA.h"
 
 #include "VkBootstrap.h"
 
@@ -30,29 +31,29 @@ namespace Kvazar {
 			.set_app_name("Vulkan engine")
 			.request_validation_layers(true)
 			.use_default_debug_messenger()
-			.require_api_version(1, 4, 0)
+			.require_api_version(1, 3, 0)
 			.build()
 			.value();
 
 		m_ContextData.m_Instance = vkb_instance.instance;
-		if (!vkb_instance) 
-		{ 
-			KVAZAR_CRITICAL("[Instance] Didn't create instance!!!"); 
+		if (!vkb_instance)
+		{
+			KVAZAR_CRITICAL("[Instance] Didn't create instance!!!");
 		}
-		else 
-		{ 
-			KVAZAR_DEBUG("[Instance] Creating instance..."); 
+		else
+		{
+			KVAZAR_DEBUG("[Instance] Creating instance...");
 		}
 
 		// Debug messenger
 		m_ContextData.m_DebugMessenger = vkb_instance.debug_messenger;
-		if (m_ContextData.m_DebugMessenger == VK_NULL_HANDLE) 
-		{ 
-			KVAZAR_CRITICAL("[Debug messenger] Didn't create debug messenger!!!"); 
+		if (m_ContextData.m_DebugMessenger == VK_NULL_HANDLE)
+		{
+			KVAZAR_CRITICAL("[Debug messenger] Didn't create debug messenger!!!");
 		}
 		else
-		{ 
-			KVAZAR_DEBUG("[Debug messenger] Creating debug messenger..."); 
+		{
+			KVAZAR_DEBUG("[Debug messenger] Creating debug messenger...");
 		}
 
 		// Surface
@@ -60,7 +61,7 @@ namespace Kvazar {
 
 		if (m_ContextData.m_Surface == VK_NULL_HANDLE)
 		{
-			KVAZAR_CRITICAL("[Surface] Didn't create surface!!!"); 
+			KVAZAR_CRITICAL("[Surface] Didn't create surface!!!");
 		}
 		else
 		{
@@ -69,47 +70,46 @@ namespace Kvazar {
 
 		// Physical device
 		VkPhysicalDeviceVulkan13Features features13{ };
-		features13.sType			= VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+		features13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
 		features13.dynamicRendering = true;
 		features13.synchronization2 = true;
 
 		VkPhysicalDeviceVulkan12Features features12{ };
-		features12.sType				= VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
-		features12.bufferDeviceAddress	= true;
-		features12.descriptorIndexing	= true;
+		features12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+		features12.bufferDeviceAddress = true;
+		features12.descriptorIndexing = true;
 
 		vkb::PhysicalDeviceSelector phDeviceSelector{ vkb_instance };
 		vkb::PhysicalDevice phDevice = phDeviceSelector
-			.set_minimum_version(1, 2)
+			.set_minimum_version(1, 3)
 			.prefer_gpu_device_type(vkb::PreferredDeviceType::discrete)
-			.set_name("NVIDIA GeForce GTX 1650") // BY DEFAULT IT CHOOSES INTEGRATED GPU, BE CAREFULL THERE !!!!!
 			.set_required_features_13(features13)
 			.set_required_features_12(features12)
 			.set_surface(m_ContextData.m_Surface)
 			.select()
 			.value();
 
-		if (!phDevice) 
-		{ 
+		if (!phDevice)
+		{
 			KVAZAR_CRITICAL("[Physical device] Didn't choose physical device!!!");
 		}
 		else
-		{ 
-			KVAZAR_DEBUG("[Physical device] Selecting physical device..."); 
+		{
+			KVAZAR_DEBUG("[Physical device] Selecting physical device...");
 			m_ContextData.m_PhysicalDevice = phDevice.physical_device;
 		}
 
 		// Logical device 
 		vkb::DeviceBuilder deviceBuilder{ phDevice };
-		vkb::Device vkbDevice = deviceBuilder.build().value();	
+		vkb::Device vkbDevice = deviceBuilder.build().value();
 
-		if (!vkbDevice) 
-		{ 
-			KVAZAR_CRITICAL("[Physical device] Didn't create logical device!!!"); 
+		if (!vkbDevice)
+		{
+			KVAZAR_CRITICAL("[Physical device] Didn't create logical device!!!");
 		}
-		else 
-		{ 
-			KVAZAR_DEBUG("[Logical device] Creating logical device..."); 
+		else
+		{
+			KVAZAR_DEBUG("[Logical device] Creating logical device...");
 			m_ContextData.m_LogicalDevice.SetDevice(vkbDevice.device);
 			m_ContextData.m_LogicalDevice.SetGraphicsQueue(vkbDevice.get_queue(vkb::QueueType::graphics).value());
 			m_ContextData.m_LogicalDevice.SetPresentationQueue(vkbDevice.get_queue(vkb::QueueType::present).value());
@@ -118,9 +118,6 @@ namespace Kvazar {
 		}
 
 		// Swapchain
-		VulkanSwapchainBuilder swpBuilder;
-		swpBuilder.SetFormat(VK_FORMAT_R8G8B8A8_UNORM);
-
 		int width, height;
 		glfwGetFramebufferSize(m_ContextData.m_Window, &width, &height);
 
@@ -133,12 +130,13 @@ namespace Kvazar {
 
 		vkb::Swapchain vkbSwapchain = swapchainBuilder
 			.set_desired_format(VkSurfaceFormatKHR{ 
-			.format = m_ContextData.m_Swapchain.GetSwapchainData().m_ImagesFormat,
+			.format = VK_FORMAT_R8G8B8A8_UNORM, 
 			.colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR})
 			.set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)
 			.set_desired_extent(width, height)
 			.set_desired_min_image_count(2)
-			.add_image_usage_flags(VK_IMAGE_USAGE_TRANSFER_DST_BIT)
+			.add_image_usage_flags(VK_IMAGE_USAGE_TRANSFER_DST_BIT 
+			| VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
 			.build()
 			.value();
 
@@ -150,14 +148,15 @@ namespace Kvazar {
 		{ 
 			KVAZAR_DEBUG("[Swapchain] Creating swapchain...");
 
-			m_ContextData.m_Swapchain = swpBuilder
-				.SetRaw(vkbSwapchain.swapchain)
-				.SetExtent2D(vkbSwapchain.extent)
-				.SetImages(vkbSwapchain.get_images().value())
-				.SetImageViews(vkbSwapchain.get_image_views().value())
+			VulkanSwapchainBuilder vulkanSwapchainBuilder;
+			m_ContextData.m_Swapchain = vulkanSwapchainBuilder
+				.SetNextImageIndex(0)
+				.SetRawSwapchain(vkbSwapchain.swapchain)
+				.SetImagesFormat(vkbSwapchain.image_format)
+				.SetImagesExtent({ vkbSwapchain.extent.width, vkbSwapchain.extent.height, 1 })
+				.SetImages(std::move(vkbSwapchain.get_images().value()))
+				.SetImageViews(std::move(vkbSwapchain.get_image_views().value()))
 				.Build();
-
-			m_ContextData.m_Swapchain.Init();
 		}
 	}
 
@@ -171,7 +170,6 @@ namespace Kvazar {
 		vkDestroySurfaceKHR(m_ContextData.m_Instance, m_ContextData.m_Surface, nullptr);
 
 		// Logical device
-		KVAZAR_DEBUG("[Logical device] Destroying logical device...");
 		vkDestroyDevice(m_ContextData.m_LogicalDevice.GetDevice(), nullptr);
 
 		// Debug messenger
