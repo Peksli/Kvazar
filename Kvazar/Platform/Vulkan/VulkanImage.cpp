@@ -129,9 +129,7 @@ namespace Kvazar {
 
 	VulkanImage VulkanImageBuilder::Build()
 	{
-		// ImageData resultData;
-
-		// image
+		/* IMAGE CREATION */
 		VkImageCreateInfo imageInfo = Utils::CreateImageInfo(
 			m_Data.format,
 			m_Data.extent,
@@ -143,26 +141,10 @@ namespace Kvazar {
 			m_Data.layout
 		);
 
-		//VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
-		//imageInfo.imageType = m_Data.extent.depth > 1 ? VK_IMAGE_TYPE_3D :
-		//	(m_Data.extent.height > 1 ? VK_IMAGE_TYPE_2D : VK_IMAGE_TYPE_1D);
-		//imageInfo.format = m_Data.format;
-		//imageInfo.extent = m_Data.extent;
-		//imageInfo.mipLevels = 1;
-		//imageInfo.arrayLayers = 1;
-		//imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-		//imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-		//imageInfo.usage = m_Data.usage;
-		//imageInfo.initialLayout = m_Data.layout;
-
 		VmaAllocationCreateInfo allocInfo = {};
 		allocInfo.usage = m_Data.memoryUsage;
 		allocInfo.requiredFlags = m_Data.flags;
 
-		//if (vmaCreateImage(m_Allocator, &imageInfo, &allocInfo,
-		//	&m_Data.image, &m_Data.allocation, nullptr) != VK_SUCCESS) {
-		//	KVAZAR_DEBUG("Failed to create image!!!");
-		//}
 		VK_CHECK(
 			vmaCreateImage(
 				m_Allocator, 
@@ -173,26 +155,12 @@ namespace Kvazar {
 				nullptr)
 		);
 
-		// image view
+		/* IMAGE VIEW CREATION */
 		VkImageViewCreateInfo viewInfo = Utils::CreateImageViewInfo(
 			m_Data.image,
 			m_Data.format,
 			m_Data.aspect
 		);
-
-		//VkImageViewCreateInfo viewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
-		//viewInfo.image = m_Data.image;
-		//viewInfo.viewType = m_Data.extent.depth > 1 ? VK_IMAGE_VIEW_TYPE_3D :
-		//	(m_Data.extent.height > 1 ? VK_IMAGE_VIEW_TYPE_2D : VK_IMAGE_VIEW_TYPE_1D);
-		//viewInfo.format = m_Data.format;
-		//viewInfo.subresourceRange.aspectMask = m_Data.aspect;
-		//viewInfo.subresourceRange.levelCount = 1;
-		//viewInfo.subresourceRange.layerCount = 1;
-
-		//if (vkCreateImageView(m_Device, &viewInfo, nullptr, &m_Data.view) != VK_SUCCESS) {
-		//	vmaDestroyImage(m_Allocator, m_Data.image, m_Data.allocation);
-		//	KVAZAR_DEBUG("Failed to create image view!!!");
-		//}
 
 		VK_CHECK(vkCreateImageView(m_Device, &viewInfo, nullptr, &m_Data.view));
 

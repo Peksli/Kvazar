@@ -6,12 +6,12 @@ namespace Kvazar {
 
 	VulkanPhysicalDevice::VulkanPhysicalDevice()
 	{
-		KVAZAR_DEBUG("[VulkanPhysicalDevice] VulkanPhysicalDevice() constructor called!!!");
+		KVAZAR_DEBUG("[VulkanPhysicalDevice] VulkanPhysicalDevice()...");
 	}
 
 	VulkanPhysicalDevice::~VulkanPhysicalDevice()
 	{
-		KVAZAR_DEBUG("[VulkanPhysicalDevice] ~VulkanPhysicalDevice() destructor called!!!");
+		KVAZAR_DEBUG("[VulkanPhysicalDevice] ~VulkanPhysicalDevice()...");
 	}
 
 }

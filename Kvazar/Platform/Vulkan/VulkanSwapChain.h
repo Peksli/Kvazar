@@ -20,15 +20,17 @@ namespace Kvazar {
 
 		void Flush();
 		void Cleanup();
-		SwapchainData& operator=(SwapchainData&&);
+
+		SwapchainData();
+		SwapchainData& operator=(SwapchainData&&) noexcept;
 	};
 
 	class VulkanSwapchain : public Swapchain
 	{
 	public:
 		VulkanSwapchain();
-		VulkanSwapchain(SwapchainData&&);
-		VulkanSwapchain& operator=(VulkanSwapchain&&);
+		VulkanSwapchain(SwapchainData&&) noexcept;
+		VulkanSwapchain& operator=(VulkanSwapchain&&) noexcept;
 		virtual ~VulkanSwapchain();
 
 		virtual void Init() override;

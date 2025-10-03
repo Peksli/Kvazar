@@ -11,7 +11,7 @@ namespace Kvazar {
 
 	VulkanContext::VulkanContext(const ContextSpec& spec)
 	{
-		KVAZAR_DEBUG("[Vulkan context] VulkanContext(const ContextSpec& spec) called");
+		KVAZAR_DEBUG("[Vulkan context] VulkanContext(const ContextSpec& spec)...");
 		m_Context = this;
 
 		m_ContextData.m_Window = spec.m_Window;
@@ -19,7 +19,7 @@ namespace Kvazar {
 
 	VulkanContext::~VulkanContext()
 	{
-		KVAZAR_DEBUG("[Vulkan context] ~VulkanContext() called");
+		KVAZAR_DEBUG("[Vulkan context] ~VulkanContext()...");
 	}
 
 	void VulkanContext::Setup()
@@ -111,8 +111,8 @@ namespace Kvazar {
 		{
 			KVAZAR_DEBUG("[Logical device] Creating logical device...");
 
-			VulkanLogicalDeviceBuilder deviceBuilder;
-			m_ContextData.m_LogicalDevice = deviceBuilder
+			VulkanLogicalDeviceBuilder logicalDeviceBuilder;
+			m_ContextData.m_LogicalDevice = logicalDeviceBuilder
 				.Reset()
 				.SetDevice(vkbDevice.device)
 				.SetGraphicsQueue(vkbDevice.get_queue(vkb::QueueType::graphics).value())
@@ -175,7 +175,7 @@ namespace Kvazar {
 		vkDestroySurfaceKHR(m_ContextData.m_Instance, m_ContextData.m_Surface, nullptr);
 
 		// Logical device
-		vkDestroyDevice(m_ContextData.m_LogicalDevice.GetDevice(), nullptr);
+		m_ContextData.m_LogicalDevice.Shutdown();
 
 		// Debug messenger
 		KVAZAR_DEBUG("[Debug messenger] Destroying debug messenger...");

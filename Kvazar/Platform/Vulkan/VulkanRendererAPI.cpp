@@ -12,16 +12,18 @@ namespace Kvazar {
 
 	VulkanRendererAPI::VulkanRendererAPI()
 	{
-		KVAZAR_DEBUG("[VulkanRendererAPI] VulkanRendererAPI() called");
+		KVAZAR_DEBUG("[VulkanRendererAPI] VulkanRendererAPI()...");
 	}
 
 	VulkanRendererAPI::~VulkanRendererAPI()
 	{
-		KVAZAR_DEBUG("[VulkanRendererAPI] ~VulkanRendererAPI() called");
+		KVAZAR_DEBUG("[VulkanRendererAPI] ~VulkanRendererAPI()...");
 	}
 
 	void VulkanRendererAPI::Init()
 	{
+		KVAZAR_DEBUG("[VulkanRendererAPI] Init()...");
+
 		VulkanContext* context = VulkanContext::GetContext();
 		m_CurrentFrameIndex = 0;
 
@@ -167,6 +169,8 @@ namespace Kvazar {
 
 	void VulkanRendererAPI::Shutdown()
 	{
+		KVAZAR_DEBUG("[VulkanRendererAPI] Shutdown()...");
+
 		VulkanContext* context = VulkanContext::GetContext();
 		vkDeviceWaitIdle(
 			context->GetContextData().m_LogicalDevice.GetDevice()
@@ -289,6 +293,8 @@ namespace Kvazar {
 
 	void VulkanRendererAPI::CreateOffscreenRenderTargets()
 	{
+		KVAZAR_DEBUG("[VulkanRendererAPI] CreateOffscreenRenderTargets()...");
+
 		VulkanContext* context = VulkanContext::GetContext();
 		VulkanSwapchain* swapchain = &context->GetContextData().m_Swapchain;
 
@@ -317,6 +323,8 @@ namespace Kvazar {
 
 	void VulkanRendererAPI::CleanupOffscreenRenderTargets()
 	{
+		KVAZAR_DEBUG("[VulkanRendererAPI] CleanupOffscreenRenderTargets()...");
+
 		VulkanContext* context = VulkanContext::GetContext();
 		VkDevice device = context->GetContextData().m_LogicalDevice.GetDevice();
 
@@ -329,7 +337,7 @@ namespace Kvazar {
 		}
 		m_FramesData.m_OffscreenRenderTargets.clear();
 
-		KVAZAR_DEBUG(FMT_STRING("Cleaned up, {} offscreen render targets left"), 
+		KVAZAR_DEBUG(FMT_STRING("Cleaned up, {} offscreen render targets left..."), 
 			m_FramesData.m_OffscreenRenderTargets.size());
 	}
 

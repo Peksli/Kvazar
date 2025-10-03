@@ -7,14 +7,14 @@ namespace Kvazar {
 	WindowsWindow::WindowsWindow(int width, int height, const char* title)
 		: Window(width, height, title)
 	{
-		KVAZAR_DEBUG("[Windows Window] WindowsWindow() called");
+		KVAZAR_DEBUG("[Windows Window] WindowsWindow()...");
 
 		Create();
 	}
 
 	WindowsWindow::~WindowsWindow()
 	{
-		KVAZAR_DEBUG("[Windows Window] ~WindowsWindow() called");
+		KVAZAR_DEBUG("[Windows Window] ~WindowsWindow()...");
 
 		m_Context->Shutdown();
 		m_Context.reset();
@@ -35,7 +35,7 @@ namespace Kvazar {
 
 		if (!m_WindowData.window)
 		{
-			KVAZAR_CRITICAL("Failed to create GLFW window!");
+			KVAZAR_CRITICAL("Failed to create GLFW window!!!");
 			glfwTerminate();
 			return;
 		}

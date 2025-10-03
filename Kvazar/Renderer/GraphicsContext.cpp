@@ -8,12 +8,12 @@ namespace Kvazar {
 
 	ContextCreator::ContextCreator()
 	{
-		KVAZAR_DEBUG("[ContextCreator] ContextCreator() called");
+		KVAZAR_DEBUG("[ContextCreator] ContextCreator()...");
 	}
 
 	ContextCreator::~ContextCreator()
 	{
-		KVAZAR_DEBUG("[ContextCreator] ~ContextCreator() called");
+		KVAZAR_DEBUG("[ContextCreator] ~ContextCreator()...");
 	}
 
 	std::shared_ptr<Context> ContextCreator::Create(const ContextSpec& spec)

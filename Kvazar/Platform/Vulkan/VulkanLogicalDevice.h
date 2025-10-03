@@ -17,6 +17,7 @@ namespace Kvazar {
 		uint32_t m_PresentationQueueIndex;
 
 		void Reset();
+		VulkanLogicalDeviceData();
 		VulkanLogicalDeviceData& operator=(VulkanLogicalDeviceData&&) noexcept;
 	};
 	
@@ -24,8 +25,8 @@ namespace Kvazar {
 	{
 	public:
 		VulkanLogicalDevice();
-		VulkanLogicalDevice(VulkanLogicalDeviceData&&);
-		VulkanLogicalDevice& operator=(VulkanLogicalDevice&&);
+		VulkanLogicalDevice(VulkanLogicalDeviceData&&) noexcept;
+		VulkanLogicalDevice& operator=(VulkanLogicalDevice&&) noexcept;
 		virtual ~VulkanLogicalDevice();
 
 		void Shutdown();

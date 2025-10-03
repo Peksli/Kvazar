@@ -15,8 +15,15 @@ namespace Kvazar {
 		m_PresentationQueueIndex = 0;
 	}
 
+	VulkanLogicalDeviceData::VulkanLogicalDeviceData()
+	{
+		Reset();
+	}
+
 	VulkanLogicalDeviceData& VulkanLogicalDeviceData::operator=(VulkanLogicalDeviceData&& rData) noexcept
 	{
+		KVAZAR_DEBUG("[VulkanLogicalDeviceData] operator=( VulkanLogicalDeviceData&& )...");
+
 		if (this != &rData)
 		{
 			m_Device = rData.m_Device;
@@ -38,14 +45,14 @@ namespace Kvazar {
 		KVAZAR_DEBUG("[VulkanLogicalDevice] VulkanLogicalDevice()...");
 	}
 
-	VulkanLogicalDevice::VulkanLogicalDevice(VulkanLogicalDeviceData&& rData)
+	VulkanLogicalDevice::VulkanLogicalDevice(VulkanLogicalDeviceData&& rData) noexcept
 	{
 		KVAZAR_DEBUG("[VulkanLogicalDevice] VulkanLogicalDevice( VulkanLogicalDeviceData&& )...");
 
 		m_Data = std::move(rData);
 	}
 
-	VulkanLogicalDevice& VulkanLogicalDevice::operator=(VulkanLogicalDevice&& rDevice)
+	VulkanLogicalDevice& VulkanLogicalDevice::operator=(VulkanLogicalDevice&& rDevice) noexcept
 	{
 		KVAZAR_DEBUG("[VulkanLogicalDevice] operator=( VulkanLogicalDevice&& )...");
 
@@ -65,6 +72,8 @@ namespace Kvazar {
 	void VulkanLogicalDevice::Shutdown()
 	{
 		KVAZAR_DEBUG("[VulkanLogicalDevice] Shutdown...");
+
+		vkDestroyDevice(m_Data.m_Device, nullptr);
 	}
 
 	/* LOGICAL DEVICE BUILDER */

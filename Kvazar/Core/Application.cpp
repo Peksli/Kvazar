@@ -7,12 +7,12 @@ namespace Kvazar {
 
 	Application::Application() 
 	{
-		KVAZAR_DEBUG("[Application] Application() called");
+		KVAZAR_DEBUG("[Application] Application()...");
 	}
 
 	Application::~Application()
 	{
-		KVAZAR_DEBUG("[Application] ~Application() called");
+		KVAZAR_DEBUG("[Application] ~Application()...");
 	}
 
 	void Application::Init()

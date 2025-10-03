@@ -21,6 +21,8 @@ namespace Kvazar {
 
 	void SwapchainData::Cleanup()
 	{
+		KVAZAR_DEBUG("[VulkanSwapchain] Cleanup()...");
+
 		VulkanContext* context = VulkanContext::GetContext();
 		VkDevice logicalDevice = context->GetContextData().m_LogicalDevice.GetDevice();
 
@@ -49,8 +51,15 @@ namespace Kvazar {
 		swapchainImagesExtent = { 0, 0, 0 };
 	}
 
-	Kvazar::SwapchainData& SwapchainData::operator=(SwapchainData&& rData)
+	SwapchainData::SwapchainData()
 	{
+		Flush();
+	}
+
+	SwapchainData& SwapchainData::operator=(SwapchainData&& rData) noexcept
+	{
+		KVAZAR_DEBUG("[SwapchainData] operator=( SwapchainData&& rData )...");
+
 		if (this != &rData)
 		{
 			nextImageIndex = rData.nextImageIndex;
@@ -70,16 +79,20 @@ namespace Kvazar {
 
 	VulkanSwapchain::VulkanSwapchain()
 	{
-		KVAZAR_DEBUG("[VulkanSwapchain] VulkanSwapchain() constructor");
+		KVAZAR_DEBUG("[VulkanSwapchain] VulkanSwapchain()...");
 	}
 
-	VulkanSwapchain::VulkanSwapchain(SwapchainData&& rData)
+	VulkanSwapchain::VulkanSwapchain(SwapchainData&& rData) noexcept
 	{
+		KVAZAR_DEBUG("[VulkanSwapchain] VulkanSwapchain( SwapchainData&& rData )...");
+
 		m_Data = std::move(rData);
 	}
 
-	Kvazar::VulkanSwapchain& VulkanSwapchain::operator=(VulkanSwapchain&& rSwapchain)
+	VulkanSwapchain& VulkanSwapchain::operator=(VulkanSwapchain&& rSwapchain) noexcept
 	{
+		KVAZAR_DEBUG("[VulkanSwapchain] operator=( VulkanSwapchain&& rSwapchain )...");
+
 		if (this != &rSwapchain)
 		{
 			m_Data = std::move(rSwapchain.m_Data);
@@ -90,12 +103,12 @@ namespace Kvazar {
 
 	VulkanSwapchain::~VulkanSwapchain()
 	{
-		KVAZAR_DEBUG("[VulkanSwapchain] ~VulkanSwapchain() destructor");
+		KVAZAR_DEBUG("[VulkanSwapchain] ~VulkanSwapchain()...");
 	}
 
 	void VulkanSwapchain::Init()
 	{
-		KVAZAR_DEBUG("[VulkanSwapchain] Init()");
+		KVAZAR_DEBUG("[VulkanSwapchain] Init()...");
 	}
 
 	void VulkanSwapchain::BeginFrame()
@@ -154,6 +167,7 @@ namespace Kvazar {
 	void VulkanSwapchain::Shutdown()
 	{
 		KVAZAR_DEBUG("[VulkanSwapchain] Shutdown()...");
+
 		m_Data.Cleanup();
 	}
 
@@ -161,12 +175,12 @@ namespace Kvazar {
 
 	VulkanSwapchainBuilder::VulkanSwapchainBuilder()
 	{
-		KVAZAR_DEBUG("[VulkanSwapchainBuilder] VulkanSwapchainBuilder() constructor");
+		KVAZAR_DEBUG("[VulkanSwapchainBuilder] VulkanSwapchainBuilder()...");
 	}
 
 	VulkanSwapchainBuilder::~VulkanSwapchainBuilder()
 	{
-		KVAZAR_DEBUG("[VulkanSwapchainBuilder] ~VulkanSwapchainBuilder() destructor");
+		KVAZAR_DEBUG("[VulkanSwapchainBuilder] ~VulkanSwapchainBuilder()...");
 	}
 
 

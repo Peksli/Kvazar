@@ -8,12 +8,12 @@ namespace Kvazar {
 
 	RendererAPI::RendererAPI()
 	{
-		KVAZAR_DEBUG("[RendererAPI] RendererAPI() called");
+		KVAZAR_DEBUG("[RendererAPI] RendererAPI()...");
 	}
 
 	RendererAPI::~RendererAPI()
 	{
-		KVAZAR_DEBUG("[RendererAPI] ~RendererAPI() called");
+		KVAZAR_DEBUG("[RendererAPI] ~RendererAPI()...");
 	}
 
 }

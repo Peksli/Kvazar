@@ -17,8 +17,8 @@ namespace Kvazar {
 
 	struct VulkanContextData
 	{
-		GLFWwindow*				m_Window = nullptr;
-		VkSurfaceKHR			m_Surface;
+		GLFWwindow*				m_Window	= nullptr;
+		VkSurfaceKHR			m_Surface	= VK_NULL_HANDLE;
 
 		VkInstance				m_Instance			= VK_NULL_HANDLE;
 		VkDebugMessenger		m_DebugMessenger	= VK_NULL_HANDLE;
