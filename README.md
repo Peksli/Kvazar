@@ -1,54 +1,54 @@
 # Kvazar 🚀
 **Game Engine on Vulkan**
 
-Kvazar — это экспериментальный игровой движок, написанный на **C++** с использованием **Vulkan API**.  
-Цель проекта — создать современную и гибкую архитектуру для работы с графикой, шейдерами и ресурсами, а также изучить практики низкоуровневого управления GPU.
+Kvazar is an experimental game engine written in **C++** using the **Vulkan API**.  
+The goal of the project is to create a modern and flexible architecture for working with graphics, shaders, and resources, as well as to explore low-level GPU management practices.
 
 ---
 
-## 🔧 Технологический стек
-- **Язык:** C++  
-- **Сборка:** CMake  
-- **Скрипты:** `.bat` файлы для автоматизации запуска и отладки  
-- **Отладка и профилирование:**  
-  - [RenderDoc](https://renderdoc.org/) — захват и анализ кадров  
-  - [NVIDIA Nsight Graphics](https://developer.nvidia.com/nsight-graphics) — профилирование GPU и анализ ресурсов  
+## 🔧 Tech Stack
+- **Language:** C++  
+- **Build System:** CMake  
+- **Scripts:** `.bat` files for automation and debugging  
+- **Debugging & Profiling:**  
+  - [RenderDoc](https://renderdoc.org/) — frame capture and analysis  
+  - [NVIDIA Nsight Graphics](https://developer.nvidia.com/nsight-graphics) — GPU profiling and resource inspection  
 
 ---
 
-## 📦 Сторонние библиотеки
-- **[GLFW](https://www.glfw.org/)** — создание окон и обработка ввода  
-- **[spdlog](https://github.com/gabime/spdlog)** — высокопроизводительное логирование  
-- **[vk-bootstrap](https://github.com/charles-lunarg/vk-bootstrap)** — упрощение инициализации Vulkan (instance, device, swapchain)  
-- **[Vulkan Memory Allocator (VMA)](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator)** — управление памятью и аллокациями  
+## 📦 Third-Party Libraries
+- **[GLFW](https://www.glfw.org/)** — window creation and input handling  
+- **[spdlog](https://github.com/gabime/spdlog)** — high-performance logging  
+- **[vk-bootstrap](https://github.com/charles-lunarg/vk-bootstrap)** — simplifies Vulkan initialization (instance, device, swapchain)  
+- **[Vulkan Memory Allocator (VMA)](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator)** — memory allocation and management  
 
 ---
 
-## 🎯 Планы развития
-- Архитектура для работы с **шейдерами**  
-- Система управления **графическими пайплайнами**  
-- Поддержка **дескрипторов и пулов**  
-- Расширение инструментов для отладки и профилирования  
+## 🎯 Roadmap
+- Architecture for handling **shaders**  
+- System for managing **graphics pipelines**  
+- Support for **descriptor sets and pools**  
+- Extended debugging and profiling tools  
 
 ---
 
-## 🖼️ Отладка и профилирование
+## 🖼️ Debugging & Profiling
 
-### Первый опыт с **NVIDIA Nsight**
+### First Experience with **NVIDIA Nsight**
 ![Nsight Screenshot](Results/Screenshots/Nsight_1.jpg)
 
-Описание: подключение к процессу, захват GPU Trace, анализ ресурсов и пайплайнов. Nsight помогает выявлять узкие места и проверять правильность использования памяти и синхронизации.  
+Description: connecting to the process, capturing GPU Trace, analyzing resources and pipelines. Nsight helps identify bottlenecks and verify correct memory usage and synchronization.  
 
 ---
 
-### Первый опыт с **RenderDoc**
-![Nsight Screenshot](Results/Screenshots/Renderdoc_1.jpg)
+### First Experience with **RenderDoc**
+![RenderDoc Screenshot](Results/Screenshots/Renderdoc_1.jpg)
 
-Описание: захват кадра, просмотр draw‑call’ов, анализ содержимого буферов и текстур. RenderDoc удобен для пошагового изучения рендеринга и проверки корректности данных.  
+Description: capturing a frame, inspecting draw calls, analyzing buffer and texture contents. RenderDoc is convenient for step-by-step rendering analysis and verifying data correctness.  
 
 ---
 
-## 🚀 Как собрать проект
+## 🚀 How to Build
 ```bash
 git clone https://github.com/yourname/Kvazar.git
 cd Kvazar
