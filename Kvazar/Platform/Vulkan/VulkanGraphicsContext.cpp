@@ -110,11 +110,16 @@ namespace Kvazar {
 		else
 		{
 			KVAZAR_DEBUG("[Logical device] Creating logical device...");
-			m_ContextData.m_LogicalDevice.SetDevice(vkbDevice.device);
-			m_ContextData.m_LogicalDevice.SetGraphicsQueue(vkbDevice.get_queue(vkb::QueueType::graphics).value());
-			m_ContextData.m_LogicalDevice.SetPresentationQueue(vkbDevice.get_queue(vkb::QueueType::present).value());
-			m_ContextData.m_LogicalDevice.SetGraphicsIndex(vkbDevice.get_queue_index(vkb::QueueType::graphics).value());
-			m_ContextData.m_LogicalDevice.SetPresentIndex(vkbDevice.get_queue_index(vkb::QueueType::present).value());
+
+			VulkanLogicalDeviceBuilder deviceBuilder;
+			m_ContextData.m_LogicalDevice = deviceBuilder
+				.Reset()
+				.SetDevice(vkbDevice.device)
+				.SetGraphicsQueue(vkbDevice.get_queue(vkb::QueueType::graphics).value())
+				.SetPresentationQueue(vkbDevice.get_queue(vkb::QueueType::present).value())
+				.SetGraphicsIndex(vkbDevice.get_queue_index(vkb::QueueType::graphics).value())
+				.SetPresentIndex(vkbDevice.get_queue_index(vkb::QueueType::present).value())
+				.Build();
 		}
 
 		// Swapchain

@@ -153,7 +153,7 @@ namespace Kvazar {
 
 	void VulkanSwapchain::Shutdown()
 	{
-		KVAZAR_DEBUG("[VulkanSwapchain] Shutdown()");
+		KVAZAR_DEBUG("[VulkanSwapchain] Shutdown()...");
 		m_Data.Cleanup();
 	}
 

@@ -207,7 +207,7 @@ namespace Kvazar {
 		VulkanSwapchain* swapchain = &context->GetContextData().m_Swapchain;
 
 		VkClearColorValue clearValue;
-		float flashColor = std::abs(std::sin(glfwGetTime()));
+		float flashColor = static_cast<float>(std::abs(std::sin(glfwGetTime())));
 		clearValue = { {0.0f, flashColor, 0.0f, 1.0f} };
 
 		VkImageSubresourceRange range = {};

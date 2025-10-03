@@ -15,7 +15,9 @@ namespace Kvazar {
 
 		VkCommandPool& GetRaw() { return m_CommandPool; }
 
-		static void Create(VulkanCommandPool& commandPool, VkCommandPoolCreateFlagBits bufferUsageMask, uint32_t queueFamilyIndex);
+		static void Create(VulkanCommandPool& commandPool, VkCommandPoolCreateFlagBits bufferUsageMask, 
+			uint32_t queueFamilyIndex);
+
 		static void Destroy(VulkanCommandPool& commandPool);
 
 	private:
